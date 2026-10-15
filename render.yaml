@@ -4,12 +4,13 @@ services:
     runtime: ruby
     plan: free
     buildCommand: "./bin/render-build.sh"
-    startCommand: "bundle exec puma -C config/puma.rb"
+    startCommand: "./bin/render-start.sh"
     envVars:
+      - key: RAILS_ENV
+        value: "production"
       - key: RAILS_MASTER_KEY
         sync: false
       - key: SOLID_QUEUE_IN_PUMA
         value: "true"
       - key: RAILS_LOG_TO_STDOUT
         value: "true"
-
