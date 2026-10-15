@@ -1,0 +1,131 @@
+<% content_for :title, "Vocabulary Revision" %>
+
+<div class="space-y-8">
+  <!-- Page Header -->
+  <div class="border-b border-stone-200 pb-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-stone-900">Vocabulary Revision</h1>
+        <p class="text-sm text-stone-500 mt-1">
+          Review words regularly to convert passive vocabulary into active daily English.
+        </p>
+      </div>
+
+      <!-- Revision Stats -->
+      <div class="flex items-center gap-2">
+        <div class="px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-center">
+          <span class="block text-xs font-mono font-bold text-amber-900"><%= @total_due %></span>
+          <span class="text-[10px] text-amber-700 font-medium">Due Today</span>
+        </div>
+        <div class="px-3 py-1.5 bg-stone-100 rounded-lg text-center">
+          <span class="block text-xs font-mono font-bold text-stone-900"><%= @total_flagged %></span>
+          <span class="text-[10px] text-stone-600 font-medium">Flagged</span>
+        </div>
+        <div class="px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-center">
+          <span class="block text-xs font-mono font-bold text-emerald-900"><%= @total_learned %></span>
+          <span class="text-[10px] text-emerald-700 font-medium">Learned</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lessons marked for revision -->
+  <% if @revision_lessons.any? %>
+    <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-5 shadow-xs space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-amber-950 flex items-center gap-2">
+          <span>★ Daily Classes Marked For Revision (<%= @revision_lessons.count %>)</span>
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <% @revision_lessons.each do |lesson| %>
+          <div class="p-3 bg-white border border-amber-200/80 rounded-lg flex items-center justify-between gap-3 shadow-2xs">
+            <div class="min-w-0">
+              <span class="text-[10px] font-mono text-stone-400 block"><%= lesson.lesson_date.strftime("%b %d, %Y") %></span>
+              <%= link_to lesson.title, lesson_path(lesson), class: "text-sm font-bold text-stone-900 hover:underline truncate block" %>
+            </div>
+            <%= link_to "Review Class →", lesson_path(lesson), class: "text-xs font-semibold text-stone-800 shrink-0" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Filter tabs & Search -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-1.5 text-xs flex-wrap">
+      <%= link_to "Due for Revision (#{@total_due})", revision_path(filter: "due"), class: "px-3 py-1.5 rounded-md font-medium #{(@filter == 'due' || @filter.blank?) ? 'bg-stone-900 text-white font-semibold' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'} transition" %>
+      <%= link_to "Flagged Difficult (#{@total_flagged})", revision_path(filter: "flagged"), class: "px-3 py-1.5 rounded-md font-medium #{@filter == 'flagged' ? 'bg-stone-900 text-white font-semibold' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'} transition" %>
+      <%= link_to "In Progress", revision_path(filter: "in_progress"), class: "px-3 py-1.5 rounded-md font-medium #{@filter == 'in_progress' ? 'bg-stone-900 text-white font-semibold' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'} transition" %>
+      <%= link_to "Learned (#{@total_learned})", revision_path(filter: "learned"), class: "px-3 py-1.5 rounded-md font-medium #{@filter == 'learned' ? 'bg-stone-900 text-white font-semibold' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'} transition" %>
+    </div>
+
+    <!-- Search in revision queue -->
+    <%= form_with url: revision_path, method: :get, class: "flex items-center gap-2" do %>
+      <%= hidden_field_tag :filter, @filter %>
+      <%= text_field_tag :query, params[:query], placeholder: "Search revision words...", class: "w-48 sm:w-56 rounded-md border border-stone-300 px-2.5 py-1 text-xs focus:border-stone-900 focus:outline-none" %>
+      <%= submit_tag "Filter", class: "px-2.5 py-1 bg-stone-900 text-white rounded-md text-xs font-semibold cursor-pointer" %>
+    <% end %>
+  </div>
+
+  <!-- Words in Revision Queue -->
+  <% if @entries.any? %>
+    <div class="space-y-3">
+      <% @entries.each do |entry| %>
+        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="space-y-1.5 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-lg font-bold text-stone-900"><%= entry.term %></span>
+              <span class="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-600 font-medium">
+                in <%= entry.word_list.name %>
+              </span>
+              <% if entry.needs_revision? %>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">
+                  ★ Flagged
+                </span>
+              <% end %>
+              <span class="text-[10px] font-mono text-stone-400">
+                <% if entry.last_reviewed_at.present? %>
+                  Reviewed <%= time_ago_in_words(entry.last_reviewed_at) %> ago
+                <% else %>
+                  Never reviewed
+                <% end %>
+              </span>
+            </div>
+
+            <% if entry.personal_note.present? %>
+              <p class="text-sm text-stone-700 leading-relaxed"><%= entry.personal_note %></p>
+            <% end %>
+
+            <% if entry.lesson %>
+              <p class="text-xs text-stone-400">
+                Class: <%= link_to entry.lesson.title, lesson_path(entry.lesson), class: "underline hover:text-stone-700" %>
+              </p>
+            <% end %>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-stone-100">
+            <!-- Mark Reviewed -->
+            <%= button_to revision_reviewed_path(entry, filter: @filter), method: :post, class: "px-3 py-1.5 rounded-lg text-xs font-semibold border border-stone-300 bg-white hover:bg-stone-50 text-stone-800 transition cursor-pointer" do %>
+              ✓ Mark Reviewed
+            <% end %>
+
+            <!-- Mastered Button -->
+            <%= button_to revision_reviewed_path(entry, filter: @filter, mastered: "true"), method: :post, class: "px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition shadow-2xs cursor-pointer" do %>
+              ★ Mastered!
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-white border border-stone-200 rounded-xl p-12 text-center text-stone-500 text-sm">
+      <p class="font-medium text-stone-800 mb-1">Queue is clear!</p>
+      <p class="text-xs text-stone-500">
+        You don't have any words in this filter right now. You can flag words from daily lessons or your word lists anytime.
+      </p>
+    </div>
+  <% end %>
+</div>
+

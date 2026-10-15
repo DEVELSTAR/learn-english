@@ -1,0 +1,107 @@
+<% content_for :title, @lesson.title %>
+
+<div class="max-w-3xl mx-auto space-y-8">
+  <!-- Back navigation & Admin controls -->
+  <div class="flex items-center justify-between text-xs text-stone-500">
+    <%= link_to "← Back to all classes", lessons_path, class: "hover:text-stone-900 transition flex items-center gap-1 font-medium" %>
+    <% if admin? %>
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] px-2 py-0.5 rounded font-mono font-bold <%= @lesson.published? ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
+          <%= @lesson.status.upcase %>
+        </span>
+        <%= link_to "Edit Lesson", edit_admin_lesson_path(@lesson), class: "underline text-stone-700 hover:text-stone-900 font-semibold" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Lesson Header Banner -->
+  <div class="border-b border-stone-200 pb-6">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-xs font-mono font-semibold text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded">
+        <%= @lesson.lesson_date.strftime("%A, %B %d, %Y") %>
+      </span>
+    </div>
+
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight leading-tight mb-4">
+      <%= @lesson.title %>
+    </h1>
+
+    <!-- Student completion controls -->
+    <% if authenticated? %>
+      <div class="flex flex-wrap items-center gap-3 pt-3">
+        <%= button_to toggle_completion_lesson_path(@lesson), method: :post, class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer #{@completion&.completed? ? 'bg-emerald-50 text-emerald-900 border border-emerald-300 hover:bg-emerald-100' : 'bg-stone-900 text-white hover:bg-stone-800'}" do %>
+          <% if @completion&.completed? %>
+            <span>✓ Completed</span>
+          <% else %>
+            <span>Mark as Completed</span>
+          <% end %>
+        <% end %>
+
+        <%= button_to toggle_revision_lesson_path(@lesson), method: :post, class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer #{@completion&.needs_revision? ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-white border border-stone-300 text-stone-700 hover:bg-stone-50'}" do %>
+          <% if @completion&.needs_revision? %>
+            <span>★ Marked for Revision</span>
+          <% else %>
+            <span>Mark for Revision</span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Render Rich Text Lesson Content (with uploaded images, bullet points, formatting) -->
+  <article class="bg-white border border-stone-200 rounded-xl p-6 sm:p-10 shadow-xs">
+    <% if @lesson.content.present? %>
+      <div class="lesson-rich-text trix-content">
+        <%= @lesson.content %>
+      </div>
+    <% else %>
+      <p class="text-stone-400 italic text-sm py-8 text-center">
+        No content written for this lesson yet.
+      </p>
+    <% end %>
+  </article>
+
+  <!-- Quick Word Saver helper for students reading the lesson -->
+  <% if authenticated? %>
+    <div class="bg-stone-100/70 border border-stone-200 rounded-xl p-5 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-stone-700">Save a word from this class</h3>
+          <p class="text-xs text-stone-500">Notice a word or expression you want to master? Add it to your personal list instantly.</p>
+        </div>
+      </div>
+      <%= form_with model: WordEntry.new, url: word_entries_path, class: "flex items-center gap-2" do |f| %>
+        <%= hidden_field_tag :return_to, lesson_path(@lesson) %>
+        <%= f.hidden_field :lesson_id, value: @lesson.id %>
+        <%= f.hidden_field :word_list_id, value: current_user.word_lists.first&.id %>
+        <%= f.text_field :term, required: true, placeholder: "Type word or phrase...", class: "w-full rounded-md border border-stone-300 px-3 py-1.5 text-xs text-stone-900 focus:border-stone-900 focus:outline-none bg-white" %>
+        <%= f.submit "+ Save Word", class: "px-3.5 py-1.5 bg-stone-900 text-white rounded-md text-xs font-semibold hover:bg-stone-800 transition cursor-pointer shrink-0" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Previous & Next Lesson Navigation Footer -->
+  <div class="pt-6 border-t border-stone-200">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <% if @previous_lesson %>
+          <%= link_to lesson_path(@previous_lesson), class: "block p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition" do %>
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 block mb-1">← Previous Class</span>
+            <span class="text-sm font-bold text-stone-900 line-clamp-1"><%= @previous_lesson.title %></span>
+            <span class="text-xs text-stone-500 font-mono"><%= @previous_lesson.lesson_date.strftime("%b %d, %Y") %></span>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div>
+        <% if @next_lesson %>
+          <%= link_to lesson_path(@next_lesson), class: "block p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition text-right" do %>
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 block mb-1">Next Class →</span>
+            <span class="text-sm font-bold text-stone-900 line-clamp-1"><%= @next_lesson.title %></span>
+            <span class="text-xs text-stone-500 font-mono"><%= @next_lesson.lesson_date.strftime("%b %d, %Y") %></span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

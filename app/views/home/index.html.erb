@@ -1,0 +1,261 @@
+<% if authenticated? %>
+  <div class="space-y-8">
+    <!-- Top Welcome & Quick-Add Word Bar -->
+    <div class="bg-white border border-stone-200 rounded-xl p-6 shadow-xs">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-xl font-bold text-stone-900">Namaste, <%= current_user.name.split.first %>!</h1>
+          <p class="text-xs text-stone-500 mt-0.5">Notice a new English word today? Save it immediately so you can master it later.</p>
+        </div>
+        <div class="flex items-center gap-3 text-xs text-stone-500">
+          <span class="px-2.5 py-1 bg-stone-100 rounded-full font-medium">
+            <%= @completed_count %> <%= "class".pluralize(@completed_count) %> completed
+          </span>
+          <span class="px-2.5 py-1 bg-stone-100 rounded-full font-medium">
+            <%= current_user.word_entries.count %> <%= "word".pluralize(current_user.word_entries.count) %> saved
+          </span>
+        </div>
+      </div>
+
+      <!-- Quick Add Form -->
+      <%= form_with model: WordEntry.new, url: word_entries_path, class: "flex flex-col sm:flex-row items-stretch gap-2.5" do |f| %>
+        <%= hidden_field_tag :return_to, root_path %>
+        <div class="flex-1">
+          <%= f.text_field :term, required: true, placeholder: "Type a word or phrase (e.g. compare, take for granted)...", class: "w-full rounded-lg border border-stone-300 px-3.5 py-2 text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900 text-sm" %>
+        </div>
+        <div class="sm:w-56">
+          <%= f.collection_select :word_list_id, @word_lists, :id, :name, { selected: @default_list&.id }, class: "w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-900 focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900 text-sm bg-white" %>
+        </div>
+        <div>
+          <%= f.submit "Quick Save", class: "w-full sm:w-auto px-5 py-2 rounded-lg bg-stone-900 text-white font-medium text-sm hover:bg-stone-800 transition cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Featured / Today's Lesson Banner -->
+    <% featured_lesson = @today_lesson || @latest_lesson %>
+    <% if featured_lesson %>
+      <div class="bg-gradient-to-br from-stone-900 to-stone-800 text-white rounded-xl p-6 sm:p-8 shadow-sm">
+        <div class="flex items-center justify-between gap-4 mb-3">
+          <div class="flex items-center gap-2">
+            <% if @today_lesson %>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Today's Class
+              </span>
+            <% else %>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide uppercase bg-stone-700 text-stone-300">
+                Latest Available Class
+              </span>
+            <% end %>
+            <% if featured_lesson.topic.present? %>
+              <span class="text-xs text-stone-400">• <%= featured_lesson.topic %></span>
+            <% end %>
+          </div>
+          <span class="text-xs text-stone-400 font-mono"><%= featured_lesson.lesson_date.strftime("%B %d, %Y") %></span>
+        </div>
+
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2"><%= featured_lesson.title %></h2>
+        
+        <% intro = featured_lesson.content.to_plain_text.strip.truncate(200) if featured_lesson.content.present? %>
+        <% if intro.present? %>
+          <p class="text-stone-300 text-sm sm:text-base line-clamp-2 max-w-2xl mb-6">
+            <%= intro %>
+          </p>
+        <% end %>
+
+        <% if !@today_lesson %>
+          <p class="text-xs text-stone-400 mb-6 italic">
+            No new lesson published for today yet. Revise this latest class or review your saved vocabulary below!
+          </p>
+        <% end %>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <%= link_to lesson_path(featured_lesson), class: "inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-stone-900 font-medium text-sm hover:bg-stone-100 transition shadow-xs" do %>
+            <span><%= featured_lesson.completed_by?(current_user) ? "Review Lesson Again" : "Start Learning" %></span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          <% end %>
+
+          <% if featured_lesson.completed_by?(current_user) %>
+            <span class="inline-flex items-center gap-1.5 text-xs text-emerald-300 bg-emerald-950/60 border border-emerald-800 px-3 py-1.5 rounded-lg">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              Completed
+            </span>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="bg-white border border-stone-200 rounded-xl p-8 text-center">
+        <h2 class="text-lg font-semibold text-stone-800">Welcome to Learn English!</h2>
+        <p class="text-sm text-stone-500 mt-1 max-w-md mx-auto">
+          The teacher is currently preparing lessons. In the meantime, feel free to add your own words to your personal vocabulary lists!
+        </p>
+      </div>
+    <% end %>
+
+    <!-- 2-Column Dashboard Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left Column (2 spans): Recent Classes & Revision Queue -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- Words Due For Revision -->
+        <div class="bg-white border border-stone-200 rounded-xl p-6 shadow-xs">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-bold text-stone-900">Words For Revision</h3>
+              <p class="text-xs text-stone-500">Revise words to build long-term active recall.</p>
+            </div>
+            <%= link_to "View all (#{current_user.word_entries.due_for_revision.count})", revision_path, class: "text-xs font-semibold text-stone-700 hover:text-stone-900 underline" %>
+          </div>
+
+          <% if @words_due_revision.any? %>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <% @words_due_revision.each do |entry| %>
+                <div class="p-3 rounded-lg border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-stone-300 transition flex items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="font-semibold text-stone-900 text-sm truncate"><%= entry.term %></p>
+                    <% if entry.personal_note.present? %>
+                      <p class="text-xs text-stone-500 truncate"><%= entry.personal_note %></p>
+                    <% else %>
+                      <p class="text-xs text-stone-400 italic">No notes added</p>
+                    <% end %>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <% if entry.needs_revision? %>
+                      <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-medium">Revision</span>
+                    <% else %>
+                      <span class="text-[10px] bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded font-medium"><%= entry.status.humanize %></span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="p-6 text-center text-xs text-stone-500 bg-stone-50 rounded-lg">
+              No words marked for revision right now. Great job keeping your list up to date!
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Recent Lessons -->
+        <div class="bg-white border border-stone-200 rounded-xl p-6 shadow-xs">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-bold text-stone-900">Recent Classes</h3>
+              <p class="text-xs text-stone-500">Revisit previous classes to reinforce concepts.</p>
+            </div>
+            <%= link_to "Browse all classes", lessons_path, class: "text-xs font-semibold text-stone-700 hover:text-stone-900 underline" %>
+          </div>
+
+          <% if @recent_lessons.any? %>
+            <div class="divide-y divide-stone-100">
+              <% @recent_lessons.each do |lesson| %>
+                <div class="py-3.5 flex items-center justify-between gap-4 first:pt-0 last:pb-0">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-mono text-stone-400"><%= lesson.lesson_date.strftime("%b %d") %></span>
+                      <% if lesson.topic.present? %>
+                        <span class="text-[11px] px-1.5 py-0.2 bg-stone-100 text-stone-600 rounded"><%= lesson.topic %></span>
+                      <% end %>
+                      <% if lesson.completed_by?(current_user) %>
+                        <span class="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5">
+                          ✓ Done
+                        </span>
+                      <% end %>
+                    </div>
+                    <%= link_to lesson.title, lesson_path(lesson), class: "font-semibold text-sm text-stone-900 hover:text-stone-600 truncate block mt-0.5" %>
+                  </div>
+                  <%= link_to "Open", lesson_path(lesson), class: "text-xs px-3 py-1 rounded border border-stone-200 text-stone-700 hover:bg-stone-50 transition shrink-0" %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-xs text-stone-500 py-4 text-center">No classes published yet.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Right Column (1 span): Word Lists & Quick Stats -->
+      <div class="space-y-6">
+        <!-- My Lists -->
+        <div class="bg-white border border-stone-200 rounded-xl p-6 shadow-xs">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-bold text-stone-900">My Word Lists</h3>
+            <%= link_to "Manage", word_lists_path, class: "text-xs font-semibold text-stone-700 hover:text-stone-900 underline" %>
+          </div>
+          <div class="space-y-2">
+            <% @word_lists.each do |list| %>
+              <%= link_to word_list_path(list), class: "flex items-center justify-between p-3 rounded-lg border border-stone-100 hover:border-stone-300 hover:bg-stone-50 transition group" do %>
+                <span class="text-sm font-medium text-stone-800 group-hover:text-stone-900">
+                  <%= list.name %>
+                  <% if list.is_default? %>
+                    <span class="text-[10px] text-stone-400 ml-1">(default)</span>
+                  <% end %>
+                </span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 font-mono">
+                  <%= list.word_entries.count %>
+                </span>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Learning Tip Card -->
+        <div class="bg-stone-100/70 border border-stone-200 rounded-xl p-5 text-xs text-stone-600 space-y-2">
+          <p class="font-semibold text-stone-800 uppercase tracking-wider text-[11px]">Hinglish Tip</p>
+          <p class="leading-relaxed">
+            Har naye word ko sirf uski dictionary definition se mat samjhein. Use Hinglish mein apne rozmarrah ke context ke saath connect karein — tabhi woh naturally yaad rahega!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <!-- Public Landing Page -->
+  <div class="py-12 sm:py-16 text-center max-w-3xl mx-auto space-y-8">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-800 border border-stone-200">
+      <span>🇮🇳 Concept-First Hinglish Learning</span>
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-stone-900 leading-tight">
+      Understand English deeply, <br>
+      <span class="underline decoration-stone-300">not just memorize words.</span>
+    </h1>
+
+    <p class="text-base sm:text-lg text-stone-600 leading-relaxed max-w-2xl mx-auto">
+      Daily curated lessons conducted in natural Hinglish with real-life stories, pronunciation guides, tone nuances, and your own personal word notebook.
+    </p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+      <%= link_to "Create Free Student Account", new_registration_path, class: "w-full sm:w-auto px-6 py-3 rounded-lg bg-stone-900 text-white font-medium text-base hover:bg-stone-800 transition shadow-xs" %>
+      <%= link_to "Browse Published Classes", lessons_path, class: "w-full sm:w-auto px-6 py-3 rounded-lg border border-stone-300 text-stone-800 font-medium text-base hover:bg-stone-50 transition" %>
+    </div>
+
+    <!-- Recent Published Classes Preview -->
+    <% if @recent_lessons.any? %>
+      <div class="pt-12 text-left">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-stone-500 mb-4 text-center">Recent Daily Lessons</h2>
+        <div class="space-y-3">
+          <% @recent_lessons.each do |lesson| %>
+            <%= link_to lesson_path(lesson), class: "block p-5 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition" do %>
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <span class="text-xs font-mono text-stone-400 block mb-1"><%= lesson.lesson_date.strftime("%B %d, %Y") %></span>
+                  <h3 class="font-bold text-stone-900 text-base"><%= lesson.title %></h3>
+                  <% snippet = lesson.content.to_plain_text.strip.truncate(140) if lesson.content.present? %>
+                  <% if snippet.present? %>
+                    <p class="text-xs text-stone-500 mt-1 line-clamp-1"><%= snippet %></p>
+                  <% end %>
+                </div>
+                <span class="text-xs font-medium text-stone-700 shrink-0">Read →</span>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+

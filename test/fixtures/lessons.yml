@@ -1,0 +1,18 @@
+compare_lesson:
+  title: "Mastering 'Compare' in Everyday English"
+  slug: "mastering-compare-in-everyday-english"
+  lesson_date: <%= Date.current %>
+  topic: "Everyday Verbs"
+  introduction: "Learn the deep nuance of compare."
+  status: 1
+  author: admin
+
+draft_lesson:
+  title: "Draft Lesson Not Published Yet"
+  slug: "draft-lesson-not-published-yet"
+  lesson_date: <%= Date.current + 1.day %>
+  topic: "Upcoming"
+  introduction: "This is a secret draft."
+  status: 0
+  author: admin
+

@@ -1,0 +1,16 @@
+entry_one:
+  user: student_one
+  word_list: student_one_my_words
+  term: "Compare"
+  personal_note: "Do cheezon mein similarities & differences dekhna"
+  status: 1
+  needs_revision: true
+
+entry_private_to_two:
+  user: student_two
+  word_list: student_two_my_words
+  term: "ConfidentialWord"
+  personal_note: "Private to Student Two only"
+  status: 0
+  needs_revision: false
+

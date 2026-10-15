@@ -1,0 +1,206 @@
+<% content_for :title, "Vocabulary Lists" %>
+
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-stone-900">Vocabulary Lists</h1>
+      <p class="text-sm text-stone-500 mt-1">Study teacher-curated shared lists and keep your personal word notebooks.</p>
+    </div>
+
+    <!-- Quick Add Word Trigger (only shown if active list can be modified by user, or adds to default list) -->
+    <div class="sm:w-80">
+      <%= form_with model: WordEntry.new, url: word_entries_path, class: "flex items-center gap-1.5" do |f| %>
+        <%= hidden_field_tag :return_to, word_lists_path(id: @active_list&.id) %>
+        <%= f.hidden_field :word_list_id, value: (@active_list&.can_manage?(current_user) ? @active_list&.id : current_user.word_lists.first&.id) %>
+        <%= f.text_field :term, required: true, placeholder: (@active_list&.can_manage?(current_user) ? "Add word to '#{@active_list&.name}'..." : "Add to My Words..."), class: "w-full rounded-lg border border-stone-300 px-3 py-1.5 text-xs text-stone-900 focus:border-stone-900 focus:outline-none" %>
+        <%= f.submit "+ Add", class: "px-3 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-semibold hover:bg-stone-800 transition cursor-pointer shrink-0" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Layout: Lists Sidebar + Entries Display -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <!-- Left Navigation / Lists -->
+    <div class="md:col-span-1 space-y-5">
+      <!-- 1. Teacher Curated Lists (Shared with all students) -->
+      <% if @teacher_lists.any? || current_user.admin? %>
+        <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-xs space-y-1">
+          <div class="flex items-center justify-between px-2 py-1 mb-1">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-800">Teacher Lists</h2>
+            <span class="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded">Shared</span>
+          </div>
+          <% @teacher_lists.each do |list| %>
+            <%= link_to word_lists_path(id: list.id), class: "flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition #{list.id == @active_list&.id ? 'bg-stone-900 text-white font-semibold' : 'text-stone-700 hover:bg-stone-100'}" do %>
+              <span class="truncate"><%= list.name %></span>
+              <span class="text-xs font-mono px-1.5 py-0.5 rounded-full #{list.id == @active_list&.id ? 'bg-stone-800 text-stone-300' : 'bg-stone-100 text-stone-600'}">
+                <%= list.word_entries.count %>
+              </span>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- 2. Personal Lists (Specific to this user only) -->
+      <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-xs space-y-1">
+        <div class="flex items-center justify-between px-2 py-1 mb-1">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-stone-500">
+            <%= current_user.admin? ? "My Admin Lists" : "My Personal Lists" %>
+          </h2>
+          <span class="text-[10px] font-medium text-stone-400">Private</span>
+        </div>
+        <% @my_lists.each do |list| %>
+          <%= link_to word_lists_path(id: list.id), class: "flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition #{list.id == @active_list&.id ? 'bg-stone-900 text-white font-semibold' : 'text-stone-700 hover:bg-stone-100'}" do %>
+            <span class="truncate"><%= list.name %></span>
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded-full #{list.id == @active_list&.id ? 'bg-stone-800 text-stone-300' : 'bg-stone-100 text-stone-600'}">
+              <%= list.word_entries.count %>
+            </span>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- Create Custom List Box -->
+      <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-xs">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-stone-600 mb-2">
+          <%= current_user.admin? ? "+ Create Shared List" : "+ Create Personal List" %>
+        </h3>
+        <p class="text-[11px] text-stone-400 mb-2">
+          <%= current_user.admin? ? "Lists you create are automatically shared to all students." : "Visible only to your account." %>
+        </p>
+        <%= form_with model: WordList.new, url: word_lists_path, class: "space-y-2" do |f| %>
+          <%= f.text_field :name, required: true, placeholder: (current_user.admin? ? "e.g. Essential 50 Verbs" : "e.g. Office English, Idioms"), class: "w-full rounded-md border border-stone-300 px-2.5 py-1.5 text-xs focus:border-stone-900 focus:outline-none" %>
+          <%= f.submit (current_user.admin? ? "Create Shared List" : "Create List"), class: "w-full py-1.5 bg-stone-900 text-white hover:bg-stone-800 rounded-md text-xs font-semibold transition cursor-pointer" %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Main Content Pane: Words in Selected List -->
+    <div class="md:col-span-3 space-y-4">
+      <% if @active_list %>
+        <!-- Active list header & search -->
+        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-lg font-bold text-stone-900"><%= @active_list.name %></h2>
+              
+              <% if @active_list.admin_created? %>
+                <span class="text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  ★ Teacher Curated List
+                </span>
+              <% elsif @active_list.is_default? %>
+                <span class="text-[10px] font-mono text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">Default</span>
+              <% end %>
+
+              <% if @active_list.can_manage?(current_user) && !@active_list.is_default? %>
+                <%= button_to "Delete List", word_list_path(@active_list), method: :delete, data: { turbo_confirm: "Delete this entire list and its words?" }, class: "text-xs text-red-500 hover:text-red-700 underline cursor-pointer" %>
+              <% end %>
+            </div>
+            <p class="text-xs text-stone-500 mt-1">
+              <% if @active_list.admin_created? && !current_user.admin? %>
+                Official vocabulary list prepared by the teacher for all students.
+              <% else %>
+                <%= @entries.count %> <%= "entry".pluralize(@entries.count) %> showing
+              <% end %>
+            </p>
+          </div>
+
+          <!-- In-list Search -->
+          <%= form_with url: word_lists_path, method: :get, class: "flex items-center gap-2" do %>
+            <%= hidden_field_tag :id, @active_list.id %>
+            <%= text_field_tag :query, params[:query], placeholder: "Search this list...", class: "w-48 sm:w-56 rounded-md border border-stone-300 px-2.5 py-1 text-xs focus:border-stone-900 focus:outline-none" %>
+            <%= submit_tag "Filter", class: "px-2.5 py-1 bg-stone-900 text-white rounded-md text-xs font-semibold cursor-pointer" %>
+          <% end %>
+        </div>
+
+        <!-- Words entries list -->
+        <% if @entries.any? %>
+          <div class="space-y-3">
+            <% @entries.each do |entry| %>
+              <% is_own_entry = (entry.user_id == current_user.id) %>
+              <% already_saved = @saved_word_terms.include?(entry.term.downcase) %>
+
+              <div class="bg-white border border-stone-200 rounded-xl p-4 shadow-2xs hover:border-stone-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="space-y-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-base font-bold text-stone-900"><%= entry.term %></span>
+                    
+                    <% if is_own_entry %>
+                      <!-- Status badge -->
+                      <span class="text-[10px] font-semibold px-2 py-0.5 rounded uppercase <%= entry.learned? ? 'bg-emerald-100 text-emerald-800' : (entry.learning? ? 'bg-indigo-100 text-indigo-800' : 'bg-stone-100 text-stone-700') %>">
+                        <%= entry.status.humanize %>
+                      </span>
+
+                      <% if entry.needs_revision? %>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">
+                          ★ Needs Revision
+                        </span>
+                      <% end %>
+                    <% end %>
+
+                    <% if entry.lesson %>
+                      <span class="text-[10px] text-stone-400">
+                        from <%= link_to entry.lesson.title.truncate(24), lesson_path(entry.lesson), class: "underline hover:text-stone-700" %>
+                      </span>
+                    <% end %>
+                  </div>
+
+                  <% if entry.personal_note.present? %>
+                    <p class="text-xs text-stone-600 leading-relaxed"><%= entry.personal_note %></p>
+                  <% end %>
+                </div>
+
+                <!-- Word Actions -->
+                <div class="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100">
+                  <% if is_own_entry %>
+                    <!-- Toggle Revision -->
+                    <%= button_to toggle_revision_word_entry_path(entry, return_to: word_lists_path(id: @active_list.id)), method: :post, class: "p-1.5 rounded text-xs border border-stone-200 #{entry.needs_revision? ? 'bg-amber-50 text-amber-900 border-amber-300 font-bold' : 'text-stone-500 hover:bg-stone-50'} cursor-pointer", title: "Toggle Revision" do %>
+                      <%= entry.needs_revision? ? "★ In Revision" : "☆ Revise" %>
+                    <% end %>
+
+                    <!-- Status transitions -->
+                    <% if !entry.learned? %>
+                      <%= button_to update_status_word_entry_path(entry, status: "learned", return_to: word_lists_path(id: @active_list.id)), method: :patch, class: "px-2 py-1 rounded text-xs bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100 font-medium cursor-pointer" do %>
+                        ✓ Learned
+                      <% end %>
+                    <% else %>
+                      <%= button_to update_status_word_entry_path(entry, status: "learning", return_to: word_lists_path(id: @active_list.id)), method: :patch, class: "px-2 py-1 rounded text-xs bg-stone-100 text-stone-700 hover:bg-stone-200 font-medium cursor-pointer" do %>
+                        Learning
+                      <% end %>
+                    <% end %>
+
+                    <!-- Delete -->
+                    <%= button_to word_entry_path(entry, return_to: word_lists_path(id: @active_list.id)), method: :delete, data: { turbo_confirm: "Delete '#{entry.term}'?" }, class: "p-1.5 text-stone-400 hover:text-red-600 rounded cursor-pointer" do %>
+                      ✕
+                    <% end %>
+                  <% else %>
+                    <!-- Action for student browsing an admin curated list: 1-click Save to My Words -->
+                    <% if already_saved %>
+                      <span class="text-xs text-emerald-800 font-semibold px-2 py-1 bg-emerald-50 rounded">✓ In My Words</span>
+                    <% else %>
+                      <%= form_with model: WordEntry.new, url: word_entries_path, class: "inline-block" do |f| %>
+                        <%= hidden_field_tag :return_to, word_lists_path(id: @active_list.id) %>
+                        <%= f.hidden_field :term, value: entry.term %>
+                        <%= f.hidden_field :personal_note, value: entry.personal_note %>
+                        <%= f.hidden_field :lesson_id, value: entry.lesson_id %>
+                        <%= f.submit "+ Save to My Words", class: "px-3 py-1 bg-stone-900 text-white rounded text-xs font-semibold hover:bg-stone-800 transition cursor-pointer" %>
+                      <% end %>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="bg-white border border-stone-200 rounded-xl p-8 text-center text-sm text-stone-500">
+            <% if params[:query].present? %>
+              No words found matching "<%= params[:query] %>".
+              <%= link_to "Clear search", word_lists_path(id: @active_list.id), class: "underline text-stone-700 block mt-2" %>
+            <% else %>
+              This list is currently empty.
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>
