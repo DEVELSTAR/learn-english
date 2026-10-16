@@ -1,7 +1,7 @@
 ActiveAdmin.register Lesson do
-  menu priority: 2, label: "Lessons"
+  menu priority: 2, label: "Daily Classes"
 
-  permit_params :title, :lesson_date, :status, :content
+  permit_params :title, :lesson_date, :status, :content, :lesson_type, :position
 
   controller do
     def find_resource
@@ -10,6 +10,7 @@ ActiveAdmin.register Lesson do
 
     def new
       build_resource
+      resource.lesson_type ||= :daily_class
       resource.lesson_date ||= Date.current
       super
     end
@@ -17,6 +18,7 @@ ActiveAdmin.register Lesson do
     def create
       build_resource
       resource.author = current_user
+      resource.lesson_date ||= Date.current
       super do |format|
         redirect_to admin_lessons_path and return if resource.valid?
       end
@@ -29,10 +31,17 @@ ActiveAdmin.register Lesson do
     end
   end
 
+  scope("Daily Classes", default: true) { |scope| scope.daily_classes }
+  scope("Topics") { |scope| scope.topics }
+  scope("All") { |scope| scope }
+
   index do
     selectable_column
     id_column
     column :title
+    column "Type", :lesson_type do |lesson|
+      status_tag lesson.lesson_type.humanize, class: (lesson.topic? ? "purple" : "blue")
+    end
     column "Class Date", :lesson_date do |lesson|
       lesson.lesson_date.strftime("%B %d, %Y") if lesson.lesson_date
     end
@@ -53,6 +62,7 @@ ActiveAdmin.register Lesson do
   end
 
   filter :title
+  filter :lesson_type, as: :select, collection: Lesson.lesson_types.keys
   filter :lesson_date
   filter :status, as: :select, collection: proc { Lesson.statuses.keys }
 
@@ -66,7 +76,8 @@ ActiveAdmin.register Lesson do
 
   form do |f|
     f.semantic_errors
-    f.inputs "Lesson Details" do
+    f.inputs "Class Details" do
+      f.input :lesson_type, as: :select, collection: [["Daily Class (Everyday / Random)", "daily_class"], ["Topic (Foundational / Curated Topic)", "topic"]], include_blank: false
       f.input :title, placeholder: "e.g. Mastering 'Compare' in Everyday English"
       f.input :lesson_date,
               as: :datepicker,
@@ -75,6 +86,7 @@ ActiveAdmin.register Lesson do
                 value: (f.object.lesson_date || Date.current).strftime("%Y-%m-%d"),
                 style: "width: 180px; max-width: 100%;"
               }
+      f.input :position, hint: "Order priority for topics (optional)"
       f.input :status, as: :select, collection: Lesson.statuses.keys
       f.input :content, as: :action_text, hint: "Supports images, bullet points, and Hinglish explanations"
     end
@@ -86,9 +98,13 @@ ActiveAdmin.register Lesson do
       row :id
       row :title
       row :slug
+      row :lesson_type do |lesson|
+        status_tag lesson.lesson_type.humanize
+      end
       row :lesson_date do |lesson|
         lesson.lesson_date.strftime("%B %d, %Y") if lesson.lesson_date
       end
+      row :position
       row :status do |lesson|
         status_tag lesson.status
       end

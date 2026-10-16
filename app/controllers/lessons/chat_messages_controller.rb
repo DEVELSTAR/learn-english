@@ -32,7 +32,7 @@ module Lessons
 
       respond_to do |format|
         format.turbo_stream
-        format.html { redirect_to lesson_path(@lesson, anchor: "ai-tutor") }
+        format.html { redirect_to (@lesson.topic? ? topic_path(@lesson, anchor: "ai-tutor") : lesson_path(@lesson, anchor: "ai-tutor")) }
       end
     end
 

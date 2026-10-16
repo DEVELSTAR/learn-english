@@ -1,0 +1,11 @@
+one:
+  word_list: student_one_my_words
+  user: student_one
+  role: user
+  content: "How do I use this word in a sentence?"
+
+two:
+  word_list: student_one_my_words
+  user: student_one
+  role: assistant
+  content: "Aap is tarah bol sakte hain: I can afford this book."

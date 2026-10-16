@@ -6,7 +6,7 @@
     </div>
   </div>
   <%= form_with model: WordEntry.new, url: word_entries_path, class: "flex items-center gap-2" do |f| %>
-    <%= hidden_field_tag :return_to, lesson_path(lesson) %>
+    <%= hidden_field_tag :return_to, (lesson.topic? ? topic_path(lesson) : lesson_path(lesson)) %>
     <%= f.hidden_field :lesson_id, value: lesson.id %>
     <%= f.hidden_field :word_list_id, value: current_user.word_lists.first&.id %>
     <%= f.text_field :term, required: true, placeholder: "Type word or phrase (e.g. afford, in comparison)...", class: "w-full rounded-md border border-stone-300 px-3 py-1.5 text-xs text-stone-900 focus:border-stone-900 focus:outline-none bg-white" %>

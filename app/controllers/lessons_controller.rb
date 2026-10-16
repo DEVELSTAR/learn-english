@@ -3,7 +3,7 @@ class LessonsController < ApplicationController
   before_action :set_lesson, only: %i[show toggle_completion toggle_revision clear_chat]
 
   def index
-    @lessons = Lesson.published.by_date_desc
+    @lessons = Lesson.published.daily_classes.by_date_desc
 
     if params[:query].present?
       q = "%#{params[:query].strip.downcase}%"
@@ -88,7 +88,7 @@ class LessonsController < ApplicationController
           turbo_stream.update("flash_messages", partial: "shared/flash")
         ]
       end
-      format.html { redirect_to lesson_path(@lesson, anchor: "ai-tutor"), notice: notice_msg }
+      format.html { redirect_to (@lesson.topic? ? topic_path(@lesson, anchor: "ai-tutor") : lesson_path(@lesson, anchor: "ai-tutor")), notice: notice_msg }
     end
   end
 

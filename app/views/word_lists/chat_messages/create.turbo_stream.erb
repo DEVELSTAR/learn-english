@@ -1,0 +1,23 @@
+<!-- Remove empty state if present -->
+<%= turbo_stream.remove "word_list_chat_empty_state" %>
+
+<!-- Append User Message -->
+<%= turbo_stream.append "word_list_chat_messages_list" do %>
+  <%= render partial: "word_lists/chat_messages/chat_message", locals: { chat_message: @user_message } %>
+<% end %>
+
+<!-- Append AI Tutor Message -->
+<%= turbo_stream.append "word_list_chat_messages_list" do %>
+  <%= render partial: "word_lists/chat_messages/chat_message", locals: { chat_message: @assistant_message } %>
+<% end %>
+
+<!-- Reset Chat Input -->
+<%= turbo_stream.replace "word_list_chat_input_container" do %>
+  <%= render partial: "word_lists/chat_input", locals: { word_list: @word_list } %>
+<% end %>
+
+<!-- Ensure Clear Chat button is available -->
+<%= turbo_stream.replace "word_list_clear_chat_container" do %>
+  <%= render partial: "word_lists/clear_chat_button", locals: { word_list: @word_list, has_messages: true } %>
+<% end %>
+

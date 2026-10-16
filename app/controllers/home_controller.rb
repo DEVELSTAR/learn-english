@@ -4,7 +4,8 @@ class HomeController < ApplicationController
   def index
     @today_lesson = Lesson.published.for_today.first
     @latest_lesson = Lesson.published.latest_published
-    @recent_lessons = Lesson.published.by_date_desc.limit(5)
+    @recent_lessons = Lesson.published.daily_classes.by_date_desc.limit(5)
+    @featured_topics = Lesson.published.topics.ordered_topics.limit(3)
 
     if authenticated?
       @default_list = current_user.word_lists.find_by(is_default: true) || current_user.word_lists.first
@@ -15,4 +16,3 @@ class HomeController < ApplicationController
     end
   end
 end
-

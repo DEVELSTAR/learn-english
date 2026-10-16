@@ -1,6 +1,7 @@
 class WordList < ApplicationRecord
   belongs_to :user
   has_many :word_entries, dependent: :destroy
+  has_many :word_list_chat_messages, dependent: :destroy
 
   validates :name, presence: true, length: { maximum: 100 }
   validates :name, uniqueness: { scope: :user_id, case_sensitive: false, message: "list already exists in your lists" }

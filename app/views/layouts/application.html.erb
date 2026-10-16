@@ -39,9 +39,11 @@
               <nav class="hidden md:flex items-center gap-1 pl-4 border-l border-stone-200">
                 <% if admin? %>
                   <%= link_to "Admin Panel", admin_root_path, class: "px-3 py-1.5 rounded-md text-xs font-bold bg-[#2c3e50] text-white hover:bg-[#1a252f] transition flex items-center gap-1.5 shadow-2xs mr-2" %>
+                  <%= link_to "Topics", topics_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{controller_name == 'topics' ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
                   <%= link_to "Daily Classes", lessons_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{controller_name == 'lessons' ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
                 <% else %>
                   <%= link_to "Home", root_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{current_page?(root_path) ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
+                  <%= link_to "Topics", topics_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{controller_name == 'topics' ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
                   <%= link_to "Daily Classes", lessons_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{controller_name == 'lessons' ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
                   <%= link_to "My Words", word_lists_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{controller_name == 'word_lists' ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
                   <%= link_to "Revision", revision_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{controller_name == 'revisions' ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
@@ -49,7 +51,8 @@
               </nav>
             <% else %>
               <nav class="hidden md:flex items-center gap-1 pl-4 border-l border-stone-200">
-                <%= link_to "Daily Classes", lessons_path, class: "px-3 py-1.5 rounded-md text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition" %>
+                <%= link_to "Topics", topics_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{controller_name == 'topics' ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
+                <%= link_to "Daily Classes", lessons_path, class: "px-3 py-1.5 rounded-md text-sm font-medium #{controller_name == 'lessons' ? 'text-stone-900 bg-stone-100 font-semibold' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'} transition" %>
               </nav>
             <% end %>
           </div>
@@ -90,9 +93,11 @@
             </div>
             <% if admin? %>
               <%= link_to "Admin Panel", admin_root_path, class: "block px-3 py-2 rounded-md text-sm font-bold text-white bg-[#2c3e50] hover:bg-[#1a252f]" %>
+              <%= link_to "Topics", topics_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
               <%= link_to "Daily Classes", lessons_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
             <% else %>
               <%= link_to "Home", root_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
+              <%= link_to "Topics", topics_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
               <%= link_to "Daily Classes", lessons_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
               <%= link_to "My Words", word_lists_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
               <%= link_to "Revision", revision_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
@@ -101,6 +106,7 @@
               <%= button_to "Sign out", session_path, method: :delete, class: "w-full text-left px-3 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded-md font-medium" %>
             </div>
           <% else %>
+            <%= link_to "Topics", topics_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
             <%= link_to "Daily Classes", lessons_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
             <%= link_to "Sign in", new_session_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-100" %>
             <%= link_to "Create an account", new_registration_path, class: "block px-3 py-2 rounded-md text-sm font-medium text-emerald-800 font-semibold" %>

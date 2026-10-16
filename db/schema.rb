@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_065947) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_084206) do
   create_table "action_text_rich_texts", force: :cascade do |t|
     t.string "name", null: false
     t.text "body"
@@ -95,8 +95,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_065947) do
     t.integer "author_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "lesson_type", default: 0, null: false
+    t.integer "position", default: 0, null: false
     t.index ["author_id"], name: "index_lessons_on_author_id"
     t.index ["lesson_date"], name: "index_lessons_on_lesson_date"
+    t.index ["lesson_type"], name: "index_lessons_on_lesson_type"
+    t.index ["position"], name: "index_lessons_on_position"
     t.index ["slug"], name: "index_lessons_on_slug", unique: true
     t.index ["status"], name: "index_lessons_on_status"
   end
@@ -140,6 +144,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_065947) do
     t.index ["word_list_id"], name: "index_word_entries_on_word_list_id"
   end
 
+  create_table "word_list_chat_messages", force: :cascade do |t|
+    t.integer "word_list_id", null: false
+    t.integer "user_id", null: false
+    t.string "role", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_word_list_chat_messages_on_user_id"
+    t.index ["word_list_id", "user_id", "created_at"], name: "idx_on_word_list_id_user_id_created_at_cb136c3cea"
+    t.index ["word_list_id"], name: "index_word_list_chat_messages_on_word_list_id"
+  end
+
   create_table "word_lists", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "name", null: false
@@ -162,5 +178,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_065947) do
   add_foreign_key "word_entries", "lessons", on_delete: :nullify
   add_foreign_key "word_entries", "users", on_delete: :cascade
   add_foreign_key "word_entries", "word_lists", on_delete: :cascade
+  add_foreign_key "word_list_chat_messages", "users"
+  add_foreign_key "word_list_chat_messages", "word_lists"
   add_foreign_key "word_lists", "users", on_delete: :cascade
 end

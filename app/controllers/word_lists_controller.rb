@@ -20,11 +20,23 @@ class WordListsController < ApplicationController
       if params[:status].present?
         @entries = @entries.where(status: params[:status])
       end
+      @chat_messages = @active_list.word_list_chat_messages.where(user: current_user).order(:created_at)
     else
       @entries = WordEntry.none
+      @chat_messages = []
     end
 
     @saved_word_terms = current_user.word_entries.pluck(:term).map(&:downcase)
+  end
+
+  def clear_chat
+    @word_list = WordList.visible_to(current_user).find(params[:id])
+    @word_list.word_list_chat_messages.where(user: current_user).destroy_all
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to word_lists_path(id: @word_list.id), notice: "Chat history cleared." }
+    end
   end
 
   def show

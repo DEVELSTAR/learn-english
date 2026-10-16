@@ -14,7 +14,7 @@
       <div data-controller="password-visibility">
         <div class="flex items-center justify-between mb-1">
           <%= f.label :password, "Password", class: "block text-xs font-semibold uppercase tracking-wider text-stone-600" %>
-          <%= link_to "Forgot password?", new_password_path, class: "text-xs text-stone-500 hover:text-stone-900 underline" %>
+          <%= link_to "Forgot password?", new_password_path, class: "text-xs text-stone-500 hover:text-stone-900 transition" %>
         </div>
         <div class="relative">
           <%= f.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, data: { password_visibility_target: "input" }, class: "w-full rounded-md border border-stone-300 px-3 py-2 pr-16 text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900 text-sm" %>
@@ -32,7 +32,7 @@
 
     <div class="mt-6 border-t border-stone-100 pt-4 text-center text-sm text-stone-500">
       Don't have an account yet?
-      <%= link_to "Create an account", new_registration_path, class: "font-medium text-stone-900 underline hover:no-underline ml-1" %>
+      <%= link_to "Create an account", new_registration_path, class: "font-semibold text-stone-900 hover:text-emerald-700 ml-1 transition" %>
     </div>
   </div>
 </div>

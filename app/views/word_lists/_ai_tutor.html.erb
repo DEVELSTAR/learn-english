@@ -1,0 +1,40 @@
+<section id="word-list-ai-tutor" class="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6 shadow-xs mt-6">
+  <!-- Tutor Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-4 mb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-700 to-teal-500 text-white flex items-center justify-center text-lg font-bold shadow-xs shrink-0">
+        ✨
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-stone-900 tracking-tight">Vocabulary AI Coach & Doubt Buster</h2>
+          <span class="text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+            Gemini 1.5 Flash
+          </span>
+        </div>
+        <p class="text-xs text-stone-500 mt-0.5">
+          Practice sentences using words from <strong><%= @active_list.name %></strong> in Hinglish, or ask Akib Sir to quiz you!
+        </p>
+      </div>
+    </div>
+
+    <%= render partial: "word_lists/clear_chat_button", locals: { word_list: @active_list, has_messages: @chat_messages.present? } %>
+  </div>
+
+  <!-- Chat History Window -->
+  <div id="word_list_chat_messages_container" class="max-h-[380px] overflow-y-auto px-1 pr-2 space-y-1 mb-4 scrollbar-thin scrollbar-thumb-stone-200">
+    <div id="word_list_chat_messages_list">
+      <% if @chat_messages.present? %>
+        <% @chat_messages.each do |message| %>
+          <%= render partial: "word_lists/chat_messages/chat_message", locals: { chat_message: message } %>
+        <% end %>
+      <% else %>
+        <%= render partial: "word_lists/chat_empty_state", locals: { word_list: @active_list } %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Chat Input -->
+  <%= render partial: "word_lists/chat_input", locals: { word_list: @active_list } %>
+</section>
+

@@ -15,7 +15,14 @@ Rails.application.routes.draw do
     resources :chat_messages, only: %i[create], module: :lessons
   end
 
-  resources :word_lists, only: %i[index show create destroy]
+  resources :topics, only: %i[index show]
+
+  resources :word_lists, only: %i[index show create destroy] do
+    member do
+      delete :clear_chat
+    end
+    resources :chat_messages, only: %i[create], module: :word_lists
+  end
   resources :word_entries, only: %i[create update destroy] do
     member do
       post :toggle_revision

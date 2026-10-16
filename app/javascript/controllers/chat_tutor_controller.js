@@ -52,7 +52,7 @@ export default class extends Controller {
   }
 
   scrollToBottom() {
-    const container = document.getElementById("chat_messages_container")
+    const container = document.getElementById("word_list_chat_messages_container") || document.getElementById("chat_messages_container")
     if (container) {
       setTimeout(() => {
         container.scrollTop = container.scrollHeight

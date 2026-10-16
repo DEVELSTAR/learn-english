@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "../stylesheets/actiontext.css";
 
+/* Reset link underlines globally for clean modern UI */
+a {
+  text-decoration: none;
+}
+
 /* Notion/Linear-like styling for Trix rich text editor */
 trix-editor {
   border: 1px solid #e7e5e4 !important;

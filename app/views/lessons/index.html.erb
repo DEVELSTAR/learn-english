@@ -30,7 +30,7 @@
           </div>
 
           <h2 class="text-xl font-bold text-stone-900 mb-2">
-            <%= link_to lesson.title, lesson_path(lesson), class: "hover:underline" %>
+            <%= link_to lesson.title, lesson_path(lesson), class: "hover:text-emerald-700 transition" %>
           </h2>
 
           <% snippet = lesson.content.to_plain_text.strip.truncate(180) if lesson.content.present? %>
@@ -41,7 +41,7 @@
           <% end %>
 
           <div class="flex items-center justify-end pt-2 border-t border-stone-100 text-xs">
-            <%= link_to "Read Class →", lesson_path(lesson), class: "font-semibold text-stone-900 hover:underline" %>
+            <%= link_to "Read Class →", lesson_path(lesson), class: "font-semibold text-stone-900 hover:text-emerald-800 transition" %>
           </div>
         </article>
       <% end %>
@@ -50,7 +50,7 @@
     <div class="text-center py-12 bg-white rounded-xl border border-stone-200 p-8">
       <p class="text-stone-600 text-sm">No classes found matching your search.</p>
       <% if params[:query].present? %>
-        <%= link_to "Clear search", lessons_path, class: "inline-block mt-3 text-xs font-medium text-stone-900 underline" %>
+        <%= link_to "Clear search", lessons_path, class: "inline-block mt-3 text-xs font-medium text-stone-600 hover:text-stone-900 transition" %>
       <% end %>
     </div>
   <% end %>

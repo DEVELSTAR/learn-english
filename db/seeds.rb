@@ -119,6 +119,72 @@ earlier_lesson = Lesson.find_or_create_by!(title: "Understanding the Phrase 'Tak
   HTML
 end
 
+puts "== Ensuring Foundational Topics Exist =="
+topic1 = Lesson.find_or_create_by!(title: "Get Started with Spoken English") do |l|
+  l.lesson_type = :topic
+  l.position = 1
+  l.lesson_date = Date.current
+  l.status = :published
+  l.author = teacher
+  l.content = <<~HTML
+    <h2>1. The Golden Rule: Fluency over Perfection</h2>
+    <p>English bolte waqt sabse bada dar hota hai: <em>"Agar maine galat bol diya toh log kya sochenge?"</em></p>
+    <p>Sach yeh hai ki har native speaker bhi roz everyday conversation mein choti-moti mistakes karta hai. Hamara goal grammar ki book ratna nahi, balki apni baat confident tareeqe se samjhana hai.</p>
+
+    <blockquote>
+      <strong>Rule #1:</strong> Never translate word-by-word from Hindi in your mind. English sentences follow <em>Subject + Verb + Object</em> structure!
+    </blockquote>
+
+    <h2>2. Three Everyday Conversational Pillars</h2>
+    <ul>
+      <li><strong>Small Talk:</strong> "How was your day?", "What are you working on lately?"</li>
+      <li><strong>Expressing Needs:</strong> "Could you help me with this?", "I would appreciate your feedback."</li>
+      <li><strong>Polite Disagreement:</strong> "I see your point, but here is another perspective."</li>
+    </ul>
+
+    <h2>3. Your Action Plan</h2>
+    <p>Aaj se har roz kam se kam <strong>5 minutes</strong> English mein sochiye (Think in English), aur jo bhi new vocabulary yahan seekhein, use hamare AI Tutor ke sath practice karke check karein!</p>
+  HTML
+end
+puts "Topic 1: #{topic1.title}"
+
+topic2 = Lesson.find_or_create_by!(title: "Must-Know Words Before You Start") do |l|
+  l.lesson_type = :topic
+  l.position = 2
+  l.lesson_date = Date.current
+  l.status = :published
+  l.author = teacher
+  l.content = <<~HTML
+    <h2>Foundational English Vocabulary</h2>
+    <p>Daily conversation shuru karne se pehle yeh 4 high-frequency expressions zaroor master kar lijiye:</p>
+
+    <ol>
+      <li>
+        <strong>Afford:</strong> Kisi cheez ke liye paise ya waqt nikal pane ki capacity hona.
+        <br><em>"I can't afford to waste time."</em>
+      </li>
+      <li>
+        <strong>Figure out:</strong> Kisi problem ka solution ya matlab samajhna.
+        <br><em>"Let me figure this out."</em>
+      </li>
+      <li>
+        <strong>Keep in touch:</strong> Raabta / contact banaye rakhna.
+        <br><em>"It was great talking, let's keep in touch!"</em>
+      </li>
+      <li>
+        <strong>Wrap up:</strong> Kisi meeting ya kaam ko finish/conclude karna.
+        <br><em>"Let's wrap up today's discussion."</em>
+      </li>
+    </ol>
+
+    <blockquote>
+      <strong>Pro Tip:</strong> In sabhi words ko apne personal list mein save karke Daily Revision mein add karein!
+    </blockquote>
+  HTML
+end
+puts "Topic 2: #{topic2.title}"
+
+
 my_words_list = student.word_lists.find_by(name: "My Words")
 to_learn_list = student.word_lists.find_by(name: "To Learn")
 revision_list = student.word_lists.find_by(name: "Revision")

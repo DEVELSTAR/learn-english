@@ -4,11 +4,19 @@ require "json"
 class GeminiTutorService
   DEFAULT_MODELS = [ "gemini-flash-latest", "gemini-flash-lite-latest" ].freeze
 
-  attr_reader :lesson, :user
+  attr_reader :context_record, :user
 
-  def initialize(lesson, user)
-    @lesson = lesson
+  def initialize(context_record, user)
+    @context_record = context_record
     @user = user
+  end
+
+  def lesson
+    @context_record if @context_record.is_a?(Lesson)
+  end
+
+  def word_list
+    @context_record if @context_record.is_a?(WordList)
   end
 
   def ask(user_message)
@@ -74,17 +82,34 @@ class GeminiTutorService
   end
 
   def build_system_prompt
-    lesson_summary = lesson.content&.to_plain_text.to_s.truncate(1500)
+    if word_list.present?
+      words = word_list.word_entries.limit(30).map { |e| "- #{e.term}#{": #{e.personal_note}" if e.personal_note.present?}" }.join("\n")
+      context_info = <<~CTX
+        CURRENT VOCABULARY LIST CONTEXT:
+        - List Name: "#{word_list.name}"
+        - Saved Words in this List:
+        #{words.presence || '(No words saved in this list yet)'}
+      CTX
+    elsif lesson.present?
+      lesson_summary = lesson.content&.to_plain_text.to_s.truncate(1500)
+      type_label = lesson.topic? ? "Topic" : "Daily Class"
+      context_info = <<~CTX
+        CURRENT #{type_label.upcase} CONTEXT:
+        - Title: "#{lesson.title}"
+        - Type: #{type_label}
+        - Date: #{lesson.lesson_date&.strftime('%B %d, %Y')}
+        - Content / Key Concepts:
+        #{lesson_summary.presence || '(No lesson text provided)'}
+      CTX
+    else
+      context_info = "GENERAL ENGLISH VOCABULARY PRACTICE"
+    end
 
     <<~PROMPT
       You are a warm, highly encouraging, and patient personal English Tutor named 'Akib Sir' on the 'Learn English' web app.
       You specialize in helping Hindi-speaking students become fluent and confident in everyday, spoken, and professional English.
 
-      CURRENT LESSON CONTEXT:
-      - Title: "#{lesson.title}"
-      - Date: #{lesson.lesson_date&.strftime('%B %d, %Y')}
-      - Lesson Content / Key Concepts:
-      #{lesson_summary.presence || '(No lesson text provided)'}
+      #{context_info}
 
       STUDENT PROFILE:
       - Name: #{user.name}
@@ -103,15 +128,18 @@ class GeminiTutorService
            d. Explain the 'why' in simple Hinglish so they remember the concept.
       3. Practice Encouragement:
          - Keep answers concise (under 150-200 words) so the student isn't overwhelmed.
-         - End with a quick follow-up question or micro-challenge asking them to make a sentence using the word.
+         - End with a quick follow-up question or micro-challenge asking them to make a sentence using one of the words.
     PROMPT
   end
 
   def build_contents(current_user_message)
-    # Gather recent conversation history (last 4 messages before this one)
-    history = lesson.lesson_chat_messages
-                    .where(user: user)
-                    .recent_for_context(4)
+    if lesson.present?
+      history = lesson.lesson_chat_messages.where(user: user).recent_for_context(4)
+    elsif word_list.present?
+      history = word_list.word_list_chat_messages.where(user: user).recent_for_context(4)
+    else
+      history = []
+    end
 
     contents = []
 
@@ -139,6 +167,7 @@ class GeminiTutorService
   end
 
   def fallback_response(user_message)
+    title_context = lesson&.title || word_list&.name || "English Practice"
     <<~MSG
       Namaste #{user.name}! 🙏 Main aapka **AI English Tutor** hoon.
 
@@ -148,9 +177,8 @@ class GeminiTutorService
       - Render Dashboard > Web Service > Environment > Add `GEMINI_API_KEY`
       - *(Aap 30 seconds mein free key le sakte hain: [aistudio.google.com](https://aistudio.google.com/))*
 
-      **Quick Tip for '#{lesson.title}':**
-      Lesson mein diye gaye keywords se ek sentence banayein aur daily conversation mein use karein!
+      **Quick Tip for '#{title_context}':**
+      Is context ke keywords se ek sentence banayein aur daily conversation mein use karein!
     MSG
   end
 end
-
