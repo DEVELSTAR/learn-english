@@ -2,8 +2,7 @@ require "net/http"
 require "json"
 
 class GeminiTutorService
-  GEMINI_MODEL = ENV.fetch("GEMINI_MODEL", "gemini-flash-latest")
-  GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/#{GEMINI_MODEL}:generateContent"
+  DEFAULT_MODELS = [ "gemini-flash-latest", "gemini-flash-lite-latest" ].freeze
 
   attr_reader :lesson, :user
 
@@ -27,41 +26,51 @@ class GeminiTutorService
 
   private
 
+  def models
+    [ ENV["GEMINI_MODEL"].presence, *DEFAULT_MODELS ].compact.uniq
+  end
+
   def call_gemini_api(api_key, user_message)
-    uri = URI("#{GEMINI_ENDPOINT}?key=#{api_key}")
+    last_error_message = nil
 
-    system_prompt = build_system_prompt
-    contents = build_contents(user_message)
+    models.each do |model_name|
+      endpoint_url = "https://generativelanguage.googleapis.com/v1beta/models/#{model_name}:generateContent?key=#{api_key}"
+      uri = URI(endpoint_url)
 
-    payload = {
-      system_instruction: {
-        parts: [ { text: system_prompt } ]
-      },
-      contents: contents,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 800
+      system_prompt = build_system_prompt
+      contents = build_contents(user_message)
+
+      payload = {
+        system_instruction: {
+          parts: [ { text: system_prompt } ]
+        },
+        contents: contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048
+        }
       }
-    }
 
-    req = Net::HTTP::Post.new(uri)
-    req["Content-Type"] = "application/json"
-    req.body = payload.to_json
+      req = Net::HTTP::Post.new(uri)
+      req["Content-Type"] = "application/json"
+      req.body = payload.to_json
 
-    res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 10, read_timeout: 30) do |http|
-      http.request(req)
+      res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 10, read_timeout: 30) do |http|
+        http.request(req)
+      end
+
+      if res.is_a?(Net::HTTPSuccess)
+        data = JSON.parse(res.body)
+        candidate = data.dig("candidates", 0, "content", "parts", 0, "text")
+        return candidate.presence || "Main aapka question samajh nahi paaya, kya aap dobara pooch sakte hain?"
+      else
+        Rails.logger.warn("[GeminiTutorService] Model '#{model_name}' returned #{res.code}: #{res.body.to_s.truncate(200)}")
+        error_data = JSON.parse(res.body) rescue {}
+        last_error_message = error_data.dig("error", "message") || res.message
+      end
     end
 
-    if res.is_a?(Net::HTTPSuccess)
-      data = JSON.parse(res.body)
-      candidate = data.dig("candidates", 0, "content", "parts", 0, "text")
-      candidate.presence || "Main aapka question samajh nahi paaya, kya aap dobara pooch sakte hain?"
-    else
-      Rails.logger.error("[GeminiTutorService] API #{res.code}: #{res.body}")
-      error_data = JSON.parse(res.body) rescue {}
-      error_msg = error_data.dig("error", "message") || res.message
-      "AI Tutor se connect nahi ho paaya: #{error_msg}. Please check your GEMINI_API_KEY or try again shortly."
-    end
+    "AI Tutor se connect nahi ho paaya: #{last_error_message}. Please check your GEMINI_API_KEY or try again shortly."
   end
 
   def build_system_prompt

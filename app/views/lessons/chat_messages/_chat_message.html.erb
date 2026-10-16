@@ -20,8 +20,8 @@
         <span>Akib Sir (AI Tutor)</span>
         <span class="text-[9px] font-mono font-medium text-stone-400 bg-white px-1.5 py-0.5 rounded border border-stone-200">Gemini 1.5 Flash</span>
       </div>
-      <div class="ai-tutor-message-body whitespace-pre-wrap">
-        <%= simple_format(chat_message.content, {}, sanitize: false) %>
+      <div class="ai-tutor-message-body">
+        <%= render_ai_markdown(chat_message.content) %>
       </div>
     </div>
   </div>

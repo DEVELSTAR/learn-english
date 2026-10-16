@@ -73,6 +73,32 @@ class GeminiTutorServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "fails over to secondary model if primary model returns 503 or error" do
+    ENV["GEMINI_API_KEY"] = "fake-test-key-12345"
+
+    calls = []
+    fake_503 = Net::HTTPServiceUnavailable.new("1.1", "503", "Service Unavailable")
+    fake_503.define_singleton_method(:body) { { "error" => { "message" => "The model is overloaded." } }.to_json }
+
+    fake_200 = Net::HTTPSuccess.new("1.1", "200", "OK")
+    fake_200.define_singleton_method(:body) { { "candidates" => [ { "content" => { "parts" => [ { "text" => "Fallback model reply!" } ] } } ] }.to_json }
+
+    with_mock_http_handler(->(*_args, &block) {
+      mock_http = Object.new
+      mock_http.define_singleton_method(:request) do |req|
+        calls << req.path
+        calls.length == 1 ? fake_503 : fake_200
+      end
+      block.call(mock_http)
+    }) do
+      response = @service.ask("Can you explain?")
+      assert_equal "Fallback model reply!", response
+      assert_equal 2, calls.length
+      assert_includes calls[0], "gemini-flash-latest"
+      assert_includes calls[1], "gemini-flash-lite-latest"
+    end
+  end
+
   private
 
   def with_mock_http_response(response_obj)
