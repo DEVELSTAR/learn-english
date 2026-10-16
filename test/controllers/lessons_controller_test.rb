@@ -77,5 +77,46 @@ class LessonsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "img[src*='/rails/active_storage/blobs/proxy/']"
   end
+
+  test "student can clear their AI chat history for a lesson" do
+    sign_in_as(@student)
+    @published_lesson.lesson_chat_messages.create!(user: @student, role: :user, content: "My question")
+    @published_lesson.lesson_chat_messages.create!(user: @student, role: :assistant, content: "My answer")
+
+    assert_difference("LessonChatMessage.count", -2) do
+      delete clear_chat_lesson_path(@published_lesson)
+    end
+
+    assert_redirected_to lesson_path(@published_lesson, anchor: "ai-tutor")
+  end
+
+  test "student can toggle lesson completion via turbo stream" do
+    sign_in_as(@student)
+    post toggle_completion_lesson_path(@published_lesson), as: :turbo_stream
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(target="lesson_student_actions")
+    assert_includes response.body, "Completed"
+  end
+
+  test "student can toggle lesson revision via turbo stream" do
+    sign_in_as(@student)
+    post toggle_revision_lesson_path(@published_lesson), as: :turbo_stream
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(target="lesson_student_actions")
+    assert_includes response.body, "Marked for Revision"
+  end
+
+  test "student can clear chat via turbo stream" do
+    sign_in_as(@student)
+    @published_lesson.lesson_chat_messages.create!(user: @student, role: :user, content: "My question")
+
+    delete clear_chat_lesson_path(@published_lesson), as: :turbo_stream
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(target="chat_messages_list")
+    assert_includes response.body, "chat_empty_state"
+  end
 end
 

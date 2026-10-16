@@ -4,7 +4,7 @@ module Authentication
   included do
     before_action :resume_session
     before_action :require_authentication
-    helper_method :authenticated?, :current_user, :admin?
+    helper_method :authenticated?, :current_user, :admin?, :super_admin?
   end
 
   class_methods do
@@ -26,9 +26,19 @@ module Authentication
       Current.user&.admin?
     end
 
+    def super_admin?
+      Current.user&.super_admin?
+    end
+
     def require_admin
       unless admin?
         redirect_to root_path, alert: "Access denied. Only the teacher can access this page."
+      end
+    end
+
+    def require_super_admin
+      unless super_admin?
+        redirect_to admin_root_path, alert: "Access denied. Only Super Administrators can perform this action."
       end
     end
 

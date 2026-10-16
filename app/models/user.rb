@@ -5,8 +5,24 @@ class User < ApplicationRecord
   has_many :word_lists, dependent: :destroy
   has_many :word_entries, dependent: :destroy
   has_many :lesson_completions, dependent: :destroy
+  has_many :lesson_chat_messages, dependent: :destroy
 
-  enum :role, { student: 0, admin: 1 }, default: :student
+  enum :role, { student: 0, admin: 1, super_admin: 2 }, default: :student
+
+  alias_method :exact_admin?, :admin?
+
+  def admin?
+    exact_admin? || super_admin?
+  end
+
+  def regular_admin?
+    exact_admin?
+  end
+
+  scope :admins, -> { where(role: %i[admin super_admin]) }
+  scope :regular_admins, -> { where(role: :admin) }
+  scope :super_admins, -> { where(role: :super_admin) }
+  scope :students, -> { where(role: :student) }
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 

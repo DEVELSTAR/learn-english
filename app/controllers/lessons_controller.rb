@@ -1,6 +1,6 @@
 class LessonsController < ApplicationController
   allow_unauthenticated_access only: %i[index show]
-  before_action :set_lesson, only: %i[show toggle_completion toggle_revision]
+  before_action :set_lesson, only: %i[show toggle_completion toggle_revision clear_chat]
 
   def index
     @lessons = Lesson.published.by_date_desc
@@ -31,24 +31,65 @@ class LessonsController < ApplicationController
       @completion = current_user.lesson_completions.find_or_initialize_by(lesson: @lesson)
       @user_word_lists = current_user.word_lists.default_first
       @saved_word_terms = current_user.word_entries.pluck(:term).map(&:downcase)
+      @chat_messages = @lesson.lesson_chat_messages.where(user: current_user).chronological
     end
   end
 
   def toggle_completion
-    completion = current_user.lesson_completions.find_or_initialize_by(lesson: @lesson)
-    completion.completed = !completion.completed
-    completion.completed_at = completion.completed? ? Time.current : nil
-    completion.save!
+    @completion = current_user.lesson_completions.find_or_initialize_by(lesson: @lesson)
+    @completion.completed = !@completion.completed
+    @completion.completed_at = @completion.completed? ? Time.current : nil
+    @completion.save!
 
-    redirect_to lesson_path(@lesson), notice: completion.completed? ? "Lesson marked as completed! Keep it up." : "Lesson marked as incomplete."
+    notice_msg = @completion.completed? ? "Lesson marked as completed! Keep it up." : "Lesson marked as incomplete."
+
+    respond_to do |format|
+      format.turbo_stream do
+        flash.now[:notice] = notice_msg
+        render turbo_stream: [
+          turbo_stream.replace("lesson_student_actions", partial: "lessons/student_actions", locals: { lesson: @lesson, completion: @completion }),
+          turbo_stream.update("flash_messages", partial: "shared/flash")
+        ]
+      end
+      format.html { redirect_to lesson_path(@lesson), notice: notice_msg }
+    end
   end
 
   def toggle_revision
-    completion = current_user.lesson_completions.find_or_initialize_by(lesson: @lesson)
-    completion.needs_revision = !completion.needs_revision
-    completion.save!
+    @completion = current_user.lesson_completions.find_or_initialize_by(lesson: @lesson)
+    @completion.needs_revision = !@completion.needs_revision
+    @completion.save!
 
-    redirect_to lesson_path(@lesson), notice: completion.needs_revision? ? "Lesson added to your revision list." : "Lesson removed from revision."
+    notice_msg = @completion.needs_revision? ? "Lesson added to your revision list." : "Lesson removed from revision."
+
+    respond_to do |format|
+      format.turbo_stream do
+        flash.now[:notice] = notice_msg
+        render turbo_stream: [
+          turbo_stream.replace("lesson_student_actions", partial: "lessons/student_actions", locals: { lesson: @lesson, completion: @completion }),
+          turbo_stream.update("flash_messages", partial: "shared/flash")
+        ]
+      end
+      format.html { redirect_to lesson_path(@lesson), notice: notice_msg }
+    end
+  end
+
+  def clear_chat
+    @lesson.lesson_chat_messages.where(user: current_user).destroy_all
+    notice_msg = "AI chat history cleared for this lesson."
+
+    respond_to do |format|
+      format.turbo_stream do
+        flash.now[:notice] = notice_msg
+        render turbo_stream: [
+          turbo_stream.update("chat_messages_list", partial: "lessons/chat_empty_state"),
+          turbo_stream.replace("chat_input_container", partial: "lessons/chat_input", locals: { lesson: @lesson }),
+          turbo_stream.replace("clear_chat_container", partial: "lessons/clear_chat_button", locals: { lesson: @lesson, has_messages: false }),
+          turbo_stream.update("flash_messages", partial: "shared/flash")
+        ]
+      end
+      format.html { redirect_to lesson_path(@lesson, anchor: "ai-tutor"), notice: notice_msg }
+    end
   end
 
   private

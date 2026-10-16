@@ -10,7 +10,9 @@ Rails.application.routes.draw do
     member do
       post :toggle_completion
       post :toggle_revision
+      delete :clear_chat
     end
+    resources :chat_messages, only: %i[create], module: :lessons
   end
 
   resources :word_lists, only: %i[index show create destroy]

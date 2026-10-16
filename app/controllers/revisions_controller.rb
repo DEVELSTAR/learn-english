@@ -33,13 +33,30 @@ class RevisionsController < ApplicationController
     
     if params[:mastered] == "true"
       entry.update!(status: :learned, needs_revision: false, last_reviewed_at: Time.current)
-      flash[:notice] = "Shabash! '#{entry.term}' marked as Learned and removed from revision queue."
+      msg = "Shabash! '#{entry.term}' marked as Learned and removed from revision queue."
     else
       entry.mark_reviewed!
-      flash[:notice] = "'#{entry.term}' reviewed."
+      msg = "'#{entry.term}' reviewed."
     end
 
-    redirect_to revision_path(filter: params[:filter])
+    total_due = current_user.word_entries.due_for_revision.count
+    total_flagged = current_user.word_entries.needs_revision.count
+    total_learned = current_user.word_entries.where(status: :learned).count
+
+    respond_to do |format|
+      format.turbo_stream do
+        flash.now[:notice] = msg
+        render turbo_stream: [
+          turbo_stream.remove(helpers.dom_id(entry)),
+          turbo_stream.replace("revision_stats", partial: "revisions/stats", locals: { total_due: total_due, total_flagged: total_flagged, total_learned: total_learned }),
+          turbo_stream.update("flash_messages", partial: "shared/flash")
+        ]
+      end
+      format.html do
+        flash[:notice] = msg
+        redirect_to revision_path(filter: params[:filter])
+      end
+    end
   end
 end
 

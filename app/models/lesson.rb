@@ -3,6 +3,7 @@ class Lesson < ApplicationRecord
   has_rich_text :content
   has_many :lesson_completions, dependent: :destroy
   has_many :word_entries, dependent: :nullify
+  has_many :lesson_chat_messages, dependent: :destroy
 
   enum :status, { draft: 0, published: 1, archived: 2 }, default: :draft
 

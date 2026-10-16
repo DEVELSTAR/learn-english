@@ -1,0 +1,16 @@
+<div id="lesson_word_saver" class="bg-stone-100/70 border border-stone-200 rounded-xl p-5 shadow-xs">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+    <div>
+      <h3 class="text-xs font-bold uppercase tracking-wider text-stone-700">Save a word from this class</h3>
+      <p class="text-xs text-stone-500">Notice a word or expression you want to master? Add it to your personal list instantly.</p>
+    </div>
+  </div>
+  <%= form_with model: WordEntry.new, url: word_entries_path, class: "flex items-center gap-2" do |f| %>
+    <%= hidden_field_tag :return_to, lesson_path(lesson) %>
+    <%= f.hidden_field :lesson_id, value: lesson.id %>
+    <%= f.hidden_field :word_list_id, value: current_user.word_lists.first&.id %>
+    <%= f.text_field :term, required: true, placeholder: "Type word or phrase (e.g. afford, in comparison)...", class: "w-full rounded-md border border-stone-300 px-3 py-1.5 text-xs text-stone-900 focus:border-stone-900 focus:outline-none bg-white" %>
+    <%= f.submit "+ Save Word", class: "px-3.5 py-1.5 bg-stone-900 text-white rounded-md text-xs font-semibold hover:bg-stone-800 transition cursor-pointer shrink-0" %>
+  <% end %>
+</div>
+

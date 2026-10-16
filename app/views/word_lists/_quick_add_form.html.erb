@@ -1,0 +1,9 @@
+<div id="quick_add_word_form" class="sm:w-80">
+  <%= form_with model: WordEntry.new, url: word_entries_path, class: "flex items-center gap-1.5" do |f| %>
+    <%= hidden_field_tag :return_to, word_lists_path(id: active_list&.id) %>
+    <%= f.hidden_field :word_list_id, value: (active_list&.can_manage?(current_user) ? active_list&.id : current_user.word_lists.first&.id) %>
+    <%= f.text_field :term, required: true, placeholder: (active_list&.can_manage?(current_user) ? "Add word to '#{active_list&.name}'..." : "Add to My Words..."), class: "w-full rounded-lg border border-stone-300 px-3 py-1.5 text-xs text-stone-900 focus:border-stone-900 focus:outline-none" %>
+    <%= f.submit "+ Add", class: "px-3 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-semibold hover:bg-stone-800 transition cursor-pointer shrink-0" %>
+  <% end %>
+</div>
+

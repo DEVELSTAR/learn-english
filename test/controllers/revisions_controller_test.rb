@@ -34,4 +34,22 @@ class RevisionsControllerTest < ActionDispatch::IntegrationTest
     assert @entry_one.learned?
     assert_not @entry_one.needs_revision?
   end
+
+  test "student can mark entry reviewed via turbo stream" do
+    sign_in_as(@student_one)
+    post revision_reviewed_path(@entry_one), as: :turbo_stream
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(action="remove" target="word_entry_#{@entry_one.id}")
+    assert_includes response.body, %(action="replace" target="revision_stats")
+  end
+
+  test "student can mark entry mastered via turbo stream" do
+    sign_in_as(@student_one)
+    post revision_reviewed_path(@entry_one, mastered: "true"), as: :turbo_stream
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(action="remove" target="word_entry_#{@entry_one.id}")
+    assert_includes response.body, "Shabash!"
+  end
 end

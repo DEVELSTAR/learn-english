@@ -6,7 +6,7 @@ class WordList < ApplicationRecord
   validates :name, uniqueness: { scope: :user_id, case_sensitive: false, message: "list already exists in your lists" }
 
   scope :default_first, -> { order(is_default: :desc, name: :asc) }
-  scope :created_by_admin, -> { joins(:user).where(users: { role: :admin }) }
+  scope :created_by_admin, -> { joins(:user).where(users: { role: [User.roles[:admin], User.roles[:super_admin]] }) }
 
   def self.ransackable_attributes(auth_object = nil)
     %w[id user_id name is_default created_at updated_at]
@@ -21,7 +21,7 @@ class WordList < ApplicationRecord
   # - Any list created by an admin (shared to everyone)
   def self.visible_to(user)
     return none unless user
-    joins(:user).where("word_lists.user_id = ? OR users.role = ?", user.id, User.roles[:admin]).distinct
+    joins(:user).where("word_lists.user_id = :uid OR users.role IN (:roles)", uid: user.id, roles: [User.roles[:admin], User.roles[:super_admin]]).distinct
   end
 
   def admin_created?

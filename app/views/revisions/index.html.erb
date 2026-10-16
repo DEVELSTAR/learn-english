@@ -12,20 +12,7 @@
       </div>
 
       <!-- Revision Stats -->
-      <div class="flex items-center gap-2">
-        <div class="px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-center">
-          <span class="block text-xs font-mono font-bold text-amber-900"><%= @total_due %></span>
-          <span class="text-[10px] text-amber-700 font-medium">Due Today</span>
-        </div>
-        <div class="px-3 py-1.5 bg-stone-100 rounded-lg text-center">
-          <span class="block text-xs font-mono font-bold text-stone-900"><%= @total_flagged %></span>
-          <span class="text-[10px] text-stone-600 font-medium">Flagged</span>
-        </div>
-        <div class="px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-center">
-          <span class="block text-xs font-mono font-bold text-emerald-900"><%= @total_learned %></span>
-          <span class="text-[10px] text-emerald-700 font-medium">Learned</span>
-        </div>
-      </div>
+      <%= render partial: "revisions/stats", locals: { total_due: @total_due, total_flagged: @total_flagged, total_learned: @total_learned } %>
     </div>
   </div>
 
@@ -70,62 +57,13 @@
 
   <!-- Words in Revision Queue -->
   <% if @entries.any? %>
-    <div class="space-y-3">
+    <div id="revision_entries_list" class="space-y-3">
       <% @entries.each do |entry| %>
-        <div class="bg-white border border-stone-200 rounded-xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div class="space-y-1.5 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-lg font-bold text-stone-900"><%= entry.term %></span>
-              <span class="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-600 font-medium">
-                in <%= entry.word_list.name %>
-              </span>
-              <% if entry.needs_revision? %>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">
-                  ★ Flagged
-                </span>
-              <% end %>
-              <span class="text-[10px] font-mono text-stone-400">
-                <% if entry.last_reviewed_at.present? %>
-                  Reviewed <%= time_ago_in_words(entry.last_reviewed_at) %> ago
-                <% else %>
-                  Never reviewed
-                <% end %>
-              </span>
-            </div>
-
-            <% if entry.personal_note.present? %>
-              <p class="text-sm text-stone-700 leading-relaxed"><%= entry.personal_note %></p>
-            <% end %>
-
-            <% if entry.lesson %>
-              <p class="text-xs text-stone-400">
-                Class: <%= link_to entry.lesson.title, lesson_path(entry.lesson), class: "underline hover:text-stone-700" %>
-              </p>
-            <% end %>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex items-center gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-stone-100">
-            <!-- Mark Reviewed -->
-            <%= button_to revision_reviewed_path(entry, filter: @filter), method: :post, class: "px-3 py-1.5 rounded-lg text-xs font-semibold border border-stone-300 bg-white hover:bg-stone-50 text-stone-800 transition cursor-pointer" do %>
-              ✓ Mark Reviewed
-            <% end %>
-
-            <!-- Mastered Button -->
-            <%= button_to revision_reviewed_path(entry, filter: @filter, mastered: "true"), method: :post, class: "px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition shadow-2xs cursor-pointer" do %>
-              ★ Mastered!
-            <% end %>
-          </div>
-        </div>
+        <%= render partial: "revisions/revision_entry", locals: { entry: entry, filter: @filter } %>
       <% end %>
     </div>
   <% else %>
-    <div class="bg-white border border-stone-200 rounded-xl p-12 text-center text-stone-500 text-sm">
-      <p class="font-medium text-stone-800 mb-1">Queue is clear!</p>
-      <p class="text-xs text-stone-500">
-        You don't have any words in this filter right now. You can flag words from daily lessons or your word lists anytime.
-      </p>
-    </div>
+    <%= render partial: "revisions/empty_state" %>
   <% end %>
 </div>
 

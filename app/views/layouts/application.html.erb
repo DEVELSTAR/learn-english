@@ -13,7 +13,7 @@
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
 
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
@@ -61,7 +61,7 @@
                 <span class="text-xs text-stone-500 font-medium">
                   <%= current_user.name %>
                   <% if admin? %>
-                    <span class="ml-1 text-[10px] bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded font-mono font-bold">Admin</span>
+                    <span class="ml-1 text-[10px] bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded font-mono font-bold"><%= super_admin? ? "Super Admin" : "Admin" %></span>
                   <% end %>
                 </span>
                 <%= button_to "Sign out", session_path, method: :delete, class: "text-xs font-medium text-stone-500 hover:text-stone-900 py-1.5 px-2.5 rounded border border-stone-200 hover:border-stone-300 transition cursor-pointer" %>
@@ -111,29 +111,9 @@
 
     <!-- Global Notice & Alert Banners -->
     <div class="max-w-5xl mx-auto px-4 sm:px-6 w-full mt-4">
-      <% if notice = flash[:notice] %>
-        <div data-controller="notification" class="mb-4 flex items-center justify-between p-3.5 rounded-lg bg-emerald-50/80 border border-emerald-200 text-sm text-emerald-900 shadow-xs" role="alert">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <span><%= notice %></span>
-          </div>
-          <button type="button" data-action="click->notification#dismiss" class="text-emerald-700 hover:text-emerald-900 p-1 text-xs cursor-pointer">✕</button>
-        </div>
-      <% end %>
-
-      <% if alert = flash[:alert] %>
-        <div data-controller="notification" class="mb-4 flex items-center justify-between p-3.5 rounded-lg bg-red-50/80 border border-red-200 text-sm text-red-900 shadow-xs" role="alert">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-red-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-            </svg>
-            <span><%= alert %></span>
-          </div>
-          <button type="button" data-action="click->notification#dismiss" class="text-red-700 hover:text-red-900 p-1 text-xs cursor-pointer">✕</button>
-        </div>
-      <% end %>
+      <div id="flash_messages">
+        <%= render partial: "shared/flash" %>
+      </div>
     </div>
 
     <!-- Main Content -->

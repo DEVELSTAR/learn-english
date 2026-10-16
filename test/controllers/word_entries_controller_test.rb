@@ -64,4 +64,47 @@ class WordEntriesControllerTest < ActionDispatch::IntegrationTest
     patch update_status_word_entry_path(@entry_one, status: "learned")
     assert @entry_one.reload.learned?
   end
+
+  test "student can quick add a word via turbo stream" do
+    sign_in_as(@student_one)
+    assert_difference("@student_one.word_entries.count", 1) do
+      post word_entries_path, params: {
+        word_entry: {
+          term: "Nuance",
+          word_list_id: @list_one.id,
+          personal_note: "Subtle difference in meaning"
+        }
+      }, as: :turbo_stream
+    end
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(action="prepend" target="word_entries_list")
+    assert_includes response.body, "Nuance"
+  end
+
+  test "student can toggle revision via turbo stream" do
+    sign_in_as(@student_one)
+    post toggle_revision_word_entry_path(@entry_one), as: :turbo_stream
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(action="replace" target="word_entry_#{@entry_one.id}")
+  end
+
+  test "student can update status via turbo stream" do
+    sign_in_as(@student_one)
+    patch update_status_word_entry_path(@entry_one, status: "learned"), as: :turbo_stream
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(action="replace" target="word_entry_#{@entry_one.id}")
+  end
+
+  test "student can delete their word entry via turbo stream" do
+    sign_in_as(@student_one)
+    assert_difference("WordEntry.count", -1) do
+      delete word_entry_path(@entry_one), as: :turbo_stream
+    end
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
+    assert_includes response.body, %(action="remove" target="word_entry_#{@entry_one.id}")
+  end
 end

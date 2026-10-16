@@ -1,0 +1,77 @@
+<% 
+  active_list ||= entry.word_list
+  saved_word_terms ||= current_user.word_entries.pluck(:term).map(&:downcase)
+  is_own_entry = (entry.user_id == current_user.id)
+  already_saved = saved_word_terms.include?(entry.term.to_s.downcase)
+%>
+
+<div id="<%= dom_id(entry) %>" class="bg-white border border-stone-200 rounded-xl p-4 shadow-2xs hover:border-stone-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  <div class="space-y-1 min-w-0">
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="text-base font-bold text-stone-900"><%= entry.term %></span>
+      
+      <% if is_own_entry %>
+        <!-- Status badge -->
+        <span class="text-[10px] font-semibold px-2 py-0.5 rounded uppercase <%= entry.learned? ? 'bg-emerald-100 text-emerald-800' : (entry.learning? ? 'bg-indigo-100 text-indigo-800' : 'bg-stone-100 text-stone-700') %>">
+          <%= entry.status.humanize %>
+        </span>
+
+        <% if entry.needs_revision? %>
+          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">
+            ★ Needs Revision
+          </span>
+        <% end %>
+      <% end %>
+
+      <% if entry.lesson %>
+        <span class="text-[10px] text-stone-400">
+          from <%= link_to entry.lesson.title.truncate(24), lesson_path(entry.lesson), class: "underline hover:text-stone-700" %>
+        </span>
+      <% end %>
+    </div>
+
+    <% if entry.personal_note.present? %>
+      <p class="text-xs text-stone-600 leading-relaxed"><%= entry.personal_note %></p>
+    <% end %>
+  </div>
+
+  <!-- Word Actions -->
+  <div class="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100">
+    <% if is_own_entry %>
+      <!-- Toggle Revision -->
+      <%= button_to toggle_revision_word_entry_path(entry, return_to: (active_list ? word_lists_path(id: active_list.id) : nil)), method: :post, class: "p-1.5 rounded text-xs border border-stone-200 #{entry.needs_revision? ? 'bg-amber-50 text-amber-900 border-amber-300 font-bold' : 'text-stone-500 hover:bg-stone-50'} cursor-pointer", title: "Toggle Revision" do %>
+        <%= entry.needs_revision? ? "★ In Revision" : "☆ Revise" %>
+      <% end %>
+
+      <!-- Status transitions -->
+      <% if !entry.learned? %>
+        <%= button_to update_status_word_entry_path(entry, status: "learned", return_to: (active_list ? word_lists_path(id: active_list.id) : nil)), method: :patch, class: "px-2 py-1 rounded text-xs bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100 font-medium cursor-pointer" do %>
+          ✓ Learned
+        <% end %>
+      <% else %>
+        <%= button_to update_status_word_entry_path(entry, status: "learning", return_to: (active_list ? word_lists_path(id: active_list.id) : nil)), method: :patch, class: "px-2 py-1 rounded text-xs bg-stone-100 text-stone-700 hover:bg-stone-200 font-medium cursor-pointer" do %>
+          Learning
+        <% end %>
+      <% end %>
+
+      <!-- Delete -->
+      <%= button_to word_entry_path(entry, return_to: (active_list ? word_lists_path(id: active_list.id) : nil)), method: :delete, data: { turbo_confirm: "Delete '#{entry.term}'?" }, class: "p-1.5 text-stone-400 hover:text-red-600 rounded cursor-pointer" do %>
+        ✕
+      <% end %>
+    <% else %>
+      <!-- Action for student browsing an admin curated list: 1-click Save to My Words -->
+      <% if already_saved %>
+        <span class="text-xs text-emerald-800 font-semibold px-2 py-1 bg-emerald-50 rounded">✓ In My Words</span>
+      <% else %>
+        <%= form_with model: WordEntry.new, url: word_entries_path, class: "inline-block" do |f| %>
+          <%= hidden_field_tag :return_to, (active_list ? word_lists_path(id: active_list.id) : nil) %>
+          <%= f.hidden_field :term, value: entry.term %>
+          <%= f.hidden_field :personal_note, value: entry.personal_note %>
+          <%= f.hidden_field :lesson_id, value: entry.lesson_id %>
+          <%= f.submit "+ Save to My Words", class: "px-3 py-1 bg-stone-900 text-white rounded text-xs font-semibold hover:bg-stone-800 transition cursor-pointer" %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+

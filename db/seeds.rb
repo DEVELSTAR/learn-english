@@ -1,6 +1,15 @@
 # Seed script for Learn English Web App (Idempotent for safe deployment & local seeding)
 
-puts "== Ensuring Admin & Student Users Exist =="
+puts "== Ensuring Super Admin, Admin & Student Users Exist =="
+super_admin = User.find_or_create_by!(email_address: "star@learnenglish.com") do |u|
+  u.name = "Head Super Admin"
+  u.password = "password123"
+  u.password_confirmation = "password123"
+  u.role = :super_admin
+end
+super_admin.update!(role: :super_admin) unless super_admin.super_admin?
+puts "Super Admin: #{super_admin.email_address} (password: password123)"
+
 teacher = User.find_or_create_by!(email_address: "teacher@learnenglish.com") do |u|
   u.name = "Teacher Admin"
   u.password = "password123"
