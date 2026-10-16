@@ -3,6 +3,8 @@ class WordEntry < ApplicationRecord
   belongs_to :word_list
   belongs_to :lesson, optional: true
 
+  attr_accessor :bulk_words
+
   enum :status, { new_word: 0, learning: 1, learned: 2 }, default: :new_word
 
   validates :term, presence: true, length: { maximum: 200 }

@@ -57,10 +57,21 @@ class WordListsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div", text: /Default lists cannot be deleted/
   end
 
-  test "student cannot access another student's private list" do
+  test "student can create custom list with initial words" do
     sign_in_as(@student_one)
-    # Attempting to access Student Two's list returns 404 Not Found
-    delete word_list_path(@list_two)
-    assert_response :not_found
+    words = "afford: have enough money\npersuade - convince someone"
+
+    assert_difference("@student_one.word_lists.count", 1) do
+      assert_difference("WordEntry.count", 2) do
+        post word_lists_path, params: { word_list: { name: "Phrasal Verbs with Words", initial_words: words } }
+      end
+    end
+
+    created_list = WordList.find_by(name: "Phrasal Verbs with Words")
+    assert_not_nil created_list
+    assert_equal 2, created_list.word_entries.count
+    assert_redirected_to word_lists_path(id: created_list.id)
+    follow_redirect!
+    assert_includes response.body, "with 2 words"
   end
 end

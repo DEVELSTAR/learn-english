@@ -6,6 +6,7 @@ class User < ApplicationRecord
   has_many :word_entries, dependent: :destroy
   has_many :lesson_completions, dependent: :destroy
   has_many :lesson_chat_messages, dependent: :destroy
+  has_many :word_list_chat_messages, dependent: :destroy
 
   enum :role, { student: 0, admin: 1, super_admin: 2 }, default: :student
 

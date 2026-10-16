@@ -11,6 +11,9 @@ export default class extends Controller {
   connect() {
     this.isPlaying = false
     this.audioElement = null
+    this.sentenceQueue = []
+    this.currentIndex = 0
+    this.keepAliveTimer = null
   }
 
   disconnect() {
@@ -48,11 +51,30 @@ export default class extends Controller {
 
     window.speechSynthesis.cancel()
 
-    const utterance = new SpeechSynthesisUtterance(textToSpeak)
-    utterance.rate = 0.95 // Clear, learner-friendly pace
+    // Break into sentences so long lessons/topics play reliably without Chrome's 15s timeout
+    this.sentenceQueue = this.splitIntoChunks(textToSpeak)
+    this.currentIndex = 0
+
+    if (this.sentenceQueue.length === 0) return
+
+    this.setPlayingState(true)
+    this.startKeepAlive()
+    this.speakNext()
+  }
+
+  speakNext() {
+    if (!this.isPlaying) return
+
+    if (this.currentIndex >= this.sentenceQueue.length) {
+      this.stop()
+      return
+    }
+
+    const chunk = this.sentenceQueue[this.currentIndex]
+    const utterance = new SpeechSynthesisUtterance(chunk)
+    utterance.rate = 0.95 // Natural, learner-friendly pace
     utterance.pitch = 1.0
 
-    // Choose natural voice (prefers Indian English, UK English, or natural regional voice)
     const voices = window.speechSynthesis.getVoices()
     const preferredVoice = voices.find(v => v.lang === "en-IN") ||
                            voices.find(v => v.lang.startsWith("en-GB") && v.name.includes("Natural")) ||
@@ -63,21 +85,35 @@ export default class extends Controller {
       utterance.voice = preferredVoice
     }
 
-    utterance.onstart = () => {
-      this.setPlayingState(true)
-    }
-
     utterance.onend = () => {
-      this.setPlayingState(false)
+      this.currentIndex++
+      this.speakNext()
     }
 
     utterance.onerror = (e) => {
       console.warn("[SpeakerController] Speech error:", e)
-      this.setPlayingState(false)
+      this.stop()
     }
 
     this.currentUtterance = utterance
     window.speechSynthesis.speak(utterance)
+  }
+
+  startKeepAlive() {
+    this.stopKeepAlive()
+    this.keepAliveTimer = setInterval(() => {
+      if (window.speechSynthesis && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+        window.speechSynthesis.pause()
+        window.speechSynthesis.resume()
+      }
+    }, 5000)
+  }
+
+  stopKeepAlive() {
+    if (this.keepAliveTimer) {
+      clearInterval(this.keepAliveTimer)
+      this.keepAliveTimer = null
+    }
   }
 
   playCustomAudio(url) {
@@ -101,6 +137,10 @@ export default class extends Controller {
   }
 
   stop() {
+    this.stopKeepAlive()
+    this.sentenceQueue = []
+    this.currentIndex = 0
+
     if (this.audioElement) {
       this.audioElement.pause()
       this.audioElement.currentTime = 0
@@ -130,7 +170,14 @@ export default class extends Controller {
     this.isPlaying = isPlaying
 
     if (this.hasLabelTarget) {
-      this.labelTarget.textContent = isPlaying ? "Stop" : "Listen"
+      const currentLabel = this.labelTarget.textContent.trim()
+      if (isPlaying) {
+        this.originalLabel = this.labelTarget.dataset.originalLabel || currentLabel
+        this.labelTarget.dataset.originalLabel = this.originalLabel
+        this.labelTarget.textContent = "Stop"
+      } else {
+        this.labelTarget.textContent = this.labelTarget.dataset.originalLabel || "Listen"
+      }
     }
 
     if (this.hasIconTarget) {
@@ -140,10 +187,10 @@ export default class extends Controller {
     if (this.hasButtonTarget) {
       if (isPlaying) {
         this.buttonTarget.classList.add("bg-emerald-600", "text-white", "animate-pulse")
-        this.buttonTarget.classList.remove("bg-emerald-50", "text-emerald-700")
+        this.buttonTarget.classList.remove("bg-emerald-50", "text-emerald-800", "text-emerald-700")
       } else {
         this.buttonTarget.classList.remove("bg-emerald-600", "text-white", "animate-pulse")
-        this.buttonTarget.classList.add("bg-emerald-50", "text-emerald-700")
+        this.buttonTarget.classList.add("bg-emerald-50", "text-emerald-800")
       }
     }
   }
@@ -156,5 +203,14 @@ export default class extends Controller {
       .replace(/\s+/g, " ")           // Collapse spaces
       .trim()
   }
-}
 
+  splitIntoChunks(text) {
+    if (!text) return []
+    // Split on sentence boundaries (. ! ? \n)
+    const sentences = text.match(/[^.!?\n]+[.!?\n]+/g)
+    if (!sentences || sentences.length === 0) {
+      return [text]
+    }
+    return sentences.map(s => s.trim()).filter(s => s.length > 0)
+  }
+}

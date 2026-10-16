@@ -44,11 +44,14 @@ class WordListsController < ApplicationController
   end
 
   def create
-    @word_list = current_user.word_lists.build(list_params)
+    initial_words = params[:initial_words] || params.dig(:word_list, :initial_words)
+    @word_list = current_user.word_lists.build(list_params.except(:initial_words))
     @word_list.is_default = false
 
     if @word_list.save
-      redirect_to word_lists_path(id: @word_list.id), notice: "List '#{@word_list.name}' created#{current_user.admin? ? ' and shared with all students' : ''}."
+      count = @word_list.add_words_from_text(initial_words, user: current_user)
+      suffix = count.positive? ? " with #{count} #{'word'.pluralize(count)}" : ""
+      redirect_to word_lists_path(id: @word_list.id), notice: "List '#{@word_list.name}' created#{suffix}#{current_user.admin? ? ' and shared with all students' : ''}."
     else
       redirect_to word_lists_path, alert: @word_list.errors.full_messages.join(", ")
     end
@@ -73,6 +76,6 @@ class WordListsController < ApplicationController
   end
 
   def list_params
-    params.require(:word_list).permit(:name)
+    params.require(:word_list).permit(:name, :initial_words)
   end
 end

@@ -1,7 +1,7 @@
 ActiveAdmin.register WordList, as: "Shared Word List" do
   menu priority: 4, label: "Shared Word Lists"
 
-  permit_params :name
+  permit_params :name, :initial_words
 
   controller do
     def scoped_collection
@@ -9,10 +9,17 @@ ActiveAdmin.register WordList, as: "Shared Word List" do
     end
 
     def create
+      initial_words = params[:word_list][:initial_words]
       build_resource
       resource.user = current_user
       resource.is_default = false
-      super
+      if resource.save
+        count = resource.add_words_from_text(initial_words, user: current_user)
+        suffix = count.positive? ? " with #{count} #{'word'.pluralize(count)}" : ""
+        redirect_to admin_shared_word_list_path(resource), notice: "Shared List '#{resource.name}' created#{suffix}."
+      else
+        render :new
+      end
     end
 
     def update
@@ -51,6 +58,9 @@ ActiveAdmin.register WordList, as: "Shared Word List" do
     f.semantic_errors
     f.inputs "Shared Word List Details" do
       f.input :name, placeholder: "e.g. Essential Workplace English, Phrasal Verbs"
+      f.input :initial_words, as: :text, label: "Add Words to List (Optional)",
+              hint: "Paste multiple words at once (one per line). Format: 'word: meaning' or just 'word'. Example:\nafford: have enough money to buy\ncompare: evaluate differences",
+              input_html: { rows: 8, placeholder: "afford: have enough money to buy\ncompare: evaluate differences\ntake for granted: fail to properly appreciate" }
     end
     f.actions
   end
@@ -87,27 +97,41 @@ ActiveAdmin.register WordList, as: "Shared Word List" do
       end
     end
 
-    panel "Add Word to this Shared List" do
+    panel "Add Words to this Shared List" do
       active_admin_form_for WordEntry.new(word_list: shared_word_list), url: add_entry_admin_shared_word_list_path(shared_word_list), method: :post do |f|
         f.inputs do
-          f.input :term, label: "Word / Term"
-          f.input :personal_note, label: "Meaning & Context"
+          f.input :term, label: "Single Word / Term (or leave blank if pasting multiple below)"
+          f.input :personal_note, label: "Meaning & Context for Single Word"
+          f.input :bulk_words, as: :text, label: "OR Paste Multiple Words in Bulk (one per line)",
+                  hint: "Format: 'word: meaning' or just 'word'. Example:\nafford: can pay for\ncompare: evaluate differences",
+                  input_html: { rows: 5, placeholder: "afford: can pay for\ncompare: evaluate differences\ntake for granted: fail to appreciate" }
         end
         f.actions do
-          f.action :submit, label: "+ Add Word to List"
+          f.action :submit, label: "+ Add Word(s) to List"
         end
       end
     end
   end
 
   member_action :add_entry, method: :post do
-    entry = resource.word_entries.build(params.require(:word_entry).permit(:term, :personal_note))
-    entry.user = current_user
+    bulk = params.dig(:word_entry, :bulk_words)
+    count = 0
+    if bulk.present?
+      count += resource.add_words_from_text(bulk, user: current_user)
+    end
 
-    if entry.save
-      redirect_to admin_shared_word_list_path(resource), notice: "Word '#{entry.term}' added to #{resource.name}."
+    term = params.dig(:word_entry, :term).to_s.strip
+    if term.present?
+      entry = resource.word_entries.find_or_initialize_by(term: term)
+      entry.user = current_user
+      entry.personal_note = params.dig(:word_entry, :personal_note)
+      count += 1 if entry.save
+    end
+
+    if count > 0
+      redirect_to admin_shared_word_list_path(resource), notice: "#{count} #{'word'.pluralize(count)} added to #{resource.name}."
     else
-      redirect_to admin_shared_word_list_path(resource), alert: entry.errors.full_messages.join(", ")
+      redirect_to admin_shared_word_list_path(resource), alert: "Please provide a word or paste multiple words."
     end
   end
 

@@ -29,8 +29,39 @@ class WordList < ApplicationRecord
     user&.admin?
   end
 
+  attr_accessor :initial_words
+
   def can_manage?(current_user)
     return false unless current_user
     current_user.admin? || (!admin_created? && user_id == current_user.id)
+  end
+
+  def add_words_from_text(raw_text, user:)
+    return 0 if raw_text.blank?
+
+    count = 0
+    raw_text.to_s.each_line do |line|
+      cleaned = line.strip
+      next if cleaned.blank?
+
+      term, note = if cleaned.include?(":")
+                     cleaned.split(":", 2).map(&:strip)
+                   elsif cleaned.include?(" - ")
+                     cleaned.split(" - ", 2).map(&:strip)
+                   elsif cleaned.include?("|")
+                     cleaned.split("|", 2).map(&:strip)
+                   else
+                     [ cleaned, "" ]
+                   end
+
+      next if term.blank?
+
+      entry = word_entries.where("LOWER(term) = ?", term.downcase).first || word_entries.build(term: term)
+      entry.user = user
+      entry.personal_note = note if note.present?
+      count += 1 if entry.save
+    end
+
+    count
   end
 end

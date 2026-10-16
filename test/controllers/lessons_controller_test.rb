@@ -12,6 +12,7 @@ class LessonsControllerTest < ActionDispatch::IntegrationTest
     get lessons_path
     assert_response :success
     assert_select "h2", text: /Mastering 'Compare'/
+    assert_includes response.body, "data-controller=\"speaker\""
   end
 
   test "guest can search published lessons" do
@@ -25,6 +26,8 @@ class LessonsControllerTest < ActionDispatch::IntegrationTest
     get lesson_path(@published_lesson)
     assert_response :success
     assert_select "h1", text: @published_lesson.title
+    assert_includes response.body, "Listen to this Class"
+    assert_includes response.body, "data-controller=\"speaker\""
   end
 
   test "student cannot view draft lesson" do

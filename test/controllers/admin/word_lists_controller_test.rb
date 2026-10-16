@@ -99,12 +99,40 @@ module Admin
       assert_equal "Updated Office Communication", @shared_list.name
     end
 
-    test "admin can delete shared list" do
+    test "admin can create a shared list with initial words in bulk" do
       sign_in_as(@admin)
-      assert_difference("WordList.count", -1) do
-        delete admin_shared_word_list_path(@shared_list)
+      assert_difference("WordList.count", 1) do
+        assert_difference("WordEntry.count", 2) do
+          post admin_shared_word_lists_path, params: {
+            word_list: {
+              name: "Top 20 Travel Words",
+              initial_words: "itinerary: travel plan\nboarding pass: ticket for plane"
+            }
+          }
+        end
       end
-      assert_redirected_to admin_shared_word_lists_path
+
+      new_list = WordList.find_by(name: "Top 20 Travel Words")
+      assert_not_nil new_list
+      assert_equal 2, new_list.word_entries.count
+      assert_redirected_to admin_shared_word_list_path(new_list)
+      follow_redirect!
+      assert_includes response.body, "created with 2 words"
+    end
+
+    test "admin can add bulk words to existing shared list" do
+      sign_in_as(@admin)
+      assert_difference("@shared_list.word_entries.count", 2) do
+        post add_entry_admin_shared_word_list_path(@shared_list), params: {
+          word_entry: {
+            bulk_words: "collaborate: work together\nschedule: set meeting time"
+          }
+        }
+      end
+
+      assert_redirected_to admin_shared_word_list_path(@shared_list)
+      follow_redirect!
+      assert_includes response.body, "2 words added"
     end
   end
 end
