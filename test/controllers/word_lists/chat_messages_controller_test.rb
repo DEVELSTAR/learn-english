@@ -46,7 +46,6 @@ module WordLists
         assert_includes response.body, %(action="append" target="word_list_chat_messages_list")
         assert_includes response.body, "Can you check my sentence: I can afford this?"
         assert_includes response.body, "Shabash! Aapka sentence kaafi achha hai."
-        assert_includes response.body, "data-controller=\"speaker\""
       ensure
         GeminiTutorService.class_eval do
           alias_method :ask, :orig_ask

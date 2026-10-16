@@ -8,15 +8,6 @@
 <div id="<%= dom_id(entry) %>" class="bg-white border border-stone-200 rounded-xl p-4 shadow-2xs hover:border-stone-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
   <div class="space-y-1 min-w-0">
       <span class="text-base font-bold text-stone-900"><%= entry.term %></span>
-      <button type="button"
-              data-controller="speaker"
-              data-action="click->speaker#toggle"
-              data-speaker-text-value="<%= entry.term %>"
-              data-speaker-target="button"
-              title="Pronounce '<%= entry.term %>'"
-              class="inline-flex items-center text-xs text-stone-400 hover:text-emerald-700 p-1 rounded-md hover:bg-stone-100 transition cursor-pointer select-none">
-        <span data-speaker-target="icon">🔊</span>
-      </button>
       
       <% if is_own_entry %>
         <!-- Status badge -->

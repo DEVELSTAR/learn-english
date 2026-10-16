@@ -71,8 +71,6 @@ end
 
 gem "activeadmin", "~> 3.5"
 
-gem "activeadmin-aaa-theme", "~> 0.1.0", git: "https://github.com/paladini/activeadmin-aaa-theme.git", branch: "master"
-
 gem "kramdown", "~> 2.5"
 
 gem "kramdown-parser-gfm", "~> 1.1"

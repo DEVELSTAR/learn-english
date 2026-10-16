@@ -28,26 +28,9 @@
       <% end %>
     </div>
 
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight leading-tight mb-3">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight leading-tight mb-4">
       <%= @lesson.title %>
     </h1>
-
-    <!-- Audio Player: Listen to Lesson/Topic Aloud -->
-    <div class="mb-4 flex flex-wrap items-center gap-3 bg-stone-50 border border-stone-200/80 rounded-xl p-3 sm:px-4">
-      <button type="button"
-              data-controller="speaker"
-              data-action="click->speaker#toggle"
-              data-speaker-text-value="<%= strip_tags("#{@lesson.title}. #{@lesson.content&.to_plain_text.to_s}") %>"
-              data-speaker-target="button"
-              class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg font-semibold text-xs transition cursor-pointer select-none shadow-2xs">
-        <span data-speaker-target="icon">🔊</span>
-        <span data-speaker-target="label">Listen to this <%= @lesson.topic? ? "Topic" : "Class" %></span>
-      </button>
-      <span class="text-[11px] text-stone-500 flex items-center gap-1.5">
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-        Hear natural pronunciation & practice speaking along
-      </span>
-    </div>
 
     <!-- Student completion controls -->
     <% if authenticated? %>
@@ -57,23 +40,6 @@
 
   <!-- Render Rich Text Lesson Content (with uploaded images, bullet points, formatting) -->
   <article class="bg-white border border-stone-200 rounded-xl p-6 sm:p-10 shadow-xs">
-    <!-- Top Audio Bar inside Article -->
-    <div class="flex items-center justify-between pb-4 mb-6 border-b border-stone-100 text-xs">
-      <div class="flex items-center gap-2">
-        <span class="text-stone-400 font-mono text-[11px] uppercase tracking-wider">Lesson Audio</span>
-        <button type="button"
-                data-controller="speaker"
-                data-action="click->speaker#toggle"
-                data-speaker-text-value="<%= strip_tags("#{@lesson.title}. #{@lesson.content&.to_plain_text.to_s}") %>"
-                data-speaker-target="button"
-                class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-md font-semibold text-xs transition cursor-pointer select-none">
-          <span data-speaker-target="icon">🔊</span>
-          <span data-speaker-target="label">Listen Aloud</span>
-        </button>
-      </div>
-      <span class="text-stone-400 text-[11px]">Akib Sir Pace (0.95x)</span>
-    </div>
-
     <% if @lesson.content.present? %>
       <div class="lesson-rich-text trix-content">
         <%= @lesson.content %>

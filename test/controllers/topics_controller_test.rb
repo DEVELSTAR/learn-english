@@ -18,7 +18,6 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Foundational Topics"
     assert_includes response.body, "Get Started with English"
-    assert_includes response.body, "data-controller=\"speaker\""
   end
 
   test "authenticated student can view a topic show page with AI tutor and actions" do
@@ -27,8 +26,6 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Get Started with English"
-    assert_includes response.body, "Listen to this Topic"
-    assert_includes response.body, "data-controller=\"speaker\""
     assert_includes response.body, "AI Doubt Buster"
   end
 
