@@ -11,12 +11,7 @@ default: &default
 
 development:
   <<: *default
-  <% if ENV["DATABASE_URL"] %>
-  url: <%= ENV["DATABASE_URL"] %>
-  prepared_statements: false
-  <% else %>
   database: storage/development.sqlite3
-  <% end %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -25,13 +20,26 @@ test:
   <<: *default
   database: storage/test.sqlite3
 
-# Store production database in storage or configure via DATABASE_URL for MySQL / PostgreSQL.
-# Supports SQLite (default), MySQL (mysql2://user:pass@host/db), or PostgreSQL (postgres://user:pass@host/db)
+# Store production database in storage or configure via DATABASE_URL for PostgreSQL / Supabase.
 production:
   primary: &primary_production
     <<: *default
-    <% if ENV["DATABASE_URL"] %>
-    url: <%= ENV["DATABASE_URL"] %>
+    <% if ENV["DATABASE_URL"].present? %>
+    <%
+      db_url = ENV["DATABASE_URL"].to_s.strip
+      if db_url.include?("://")
+        scheme, rest = db_url.split("://", 2)
+        if rest && rest.include?("@")
+          userinfo, _, host_and_path = rest.rpartition("@")
+          if userinfo.include?(":")
+            user, pass = userinfo.split(":", 2)
+            encoded_pass = CGI.escape(CGI.unescape(pass)).gsub("+", "%20")
+            db_url = "#{scheme}://#{user}:#{encoded_pass}@#{host_and_path}"
+          end
+        end
+      end
+    %>
+    url: <%= db_url %>
     prepared_statements: false
     <% else %>
     database: storage/production.sqlite3
