@@ -34,7 +34,7 @@
 
     <!-- Featured / Today's Lesson Banner -->
     <% featured_lesson = @today_lesson || @latest_lesson %>
-    <% if featured_lesson %>
+    <% if featured_lesson.is_a?(Lesson) %>
       <div class="bg-gradient-to-br from-stone-900 to-stone-800 text-white rounded-xl p-6 sm:p-8 shadow-sm">
         <div class="flex items-center justify-between gap-4 mb-3">
           <div class="flex items-center gap-2">

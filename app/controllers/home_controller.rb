@@ -3,7 +3,7 @@ class HomeController < ApplicationController
 
   def index
     @today_lesson = Lesson.published.for_today.first
-    @latest_lesson = Lesson.published.latest_published
+    @latest_lesson = Lesson.latest_published
     @recent_lessons = Lesson.published.daily_classes.by_date_desc.limit(5)
     @featured_topics = Lesson.published.topics.ordered_topics.limit(3)
 

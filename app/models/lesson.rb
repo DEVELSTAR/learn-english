@@ -23,7 +23,10 @@ class Lesson < ApplicationRecord
   scope :ordered_topics, -> { topics.order(position: :asc, created_at: :asc) }
   scope :by_date_desc, -> { order(lesson_date: :desc, created_at: :desc) }
   scope :for_today, -> { published.daily_classes.where(lesson_date: Date.current) }
-  scope :latest_published, -> { published.daily_classes.by_date_desc.first }
+
+  def self.latest_published
+    published.daily_classes.by_date_desc.first
+  end
 
   def self.ransackable_attributes(auth_object = nil)
     %w[id title slug lesson_date lesson_type position status created_at updated_at]
