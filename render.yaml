@@ -12,7 +12,5 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
-      - key: SOLID_QUEUE_IN_PUMA
-        value: "true"
       - key: RAILS_LOG_TO_STDOUT
         value: "true"
