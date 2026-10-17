@@ -23,8 +23,10 @@ test:
 # Store production database in storage or configure via DATABASE_URL for PostgreSQL / Supabase.
 production:
   primary: &primary_production
-    <<: *default
     <% if ENV["DATABASE_URL"].present? %>
+    adapter: postgresql
+    encoding: unicode
+    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
     <%
       db_url = ENV["DATABASE_URL"].to_s.strip
       if db_url.include?("://")
@@ -42,6 +44,7 @@ production:
     url: <%= db_url %>
     prepared_statements: false
     <% else %>
+    <<: *default
     database: storage/production.sqlite3
     <% end %>
   cache:

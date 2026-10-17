@@ -41,7 +41,3 @@ plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
 # In other environments, only set the PID file if requested.
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
 
-# Ensure database tables, migrations, and initial seeds are prepared on Render startup
-if ENV["RENDER"]
-  system("bundle exec rails db:prepare")
-end

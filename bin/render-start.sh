@@ -4,8 +4,8 @@ set -o errexit
 
 mkdir -p storage tmp/pids
 
-# Run database setup / pending migrations / seeds
-bundle exec rails db:prepare
+# Run pending database migrations (never seeds or reset)
+bundle exec rails db:migrate
 
 # Start Puma web server
 bundle exec puma -C config/puma.rb
