@@ -9,6 +9,25 @@ class LessonCommentsControllerTest < ActionDispatch::IntegrationTest
     @topic = lessons(:topic_lesson)
   end
 
+  test "unauthenticated user can poll comments via json" do
+    get lesson_comments_path(@daily_class), headers: { "Accept" => "application/json" }
+    assert_response :success
+    data = JSON.parse(response.body)
+    assert data.key?("comments")
+    assert data.key?("total_count")
+  end
+
+  test "polling with after_id returns only newer comments" do
+    c1 = LessonComment.create!(lesson: @daily_class, user: @student, content: "First message")
+    c2 = LessonComment.create!(lesson: @daily_class, user: @other_student, content: "Second message")
+
+    get lesson_comments_path(@daily_class, after_id: c1.id), headers: { "Accept" => "application/json" }
+    assert_response :success
+    data = JSON.parse(response.body)
+    assert_equal 1, data["comments"].length
+    assert_equal c2.id, data["comments"].first["id"]
+  end
+
   test "unauthenticated user cannot post comment" do
     assert_no_difference("LessonComment.count") do
       post lesson_comments_path(@daily_class), params: {

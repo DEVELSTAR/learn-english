@@ -13,11 +13,11 @@ Rails.application.routes.draw do
       delete :clear_chat
     end
     resources :chat_messages, only: %i[create], module: :lessons
-    resources :comments, only: %i[create destroy], controller: "lesson_comments"
+    resources :comments, only: %i[index create destroy], controller: "lesson_comments"
   end
 
   resources :topics, only: %i[index show] do
-    resources :comments, only: %i[create destroy], controller: "lesson_comments"
+    resources :comments, only: %i[index create destroy], controller: "lesson_comments"
   end
 
   resources :notes, only: %i[index create edit update destroy]

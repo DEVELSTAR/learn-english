@@ -1,8 +1,37 @@
 class LessonCommentsController < ApplicationController
   include LessonCommentsHelper
 
+  allow_unauthenticated_access only: %i[index]
+
   before_action :set_lesson
   before_action :set_comment, only: :destroy
+
+  def index
+    after_id = params[:after_id].to_i
+    scope = @lesson.lesson_comments.includes(:user).chronological
+    @new_comments = after_id.positive? ? scope.where("id > ?", after_id) : scope
+
+    respond_to do |format|
+      format.json do
+        render json: {
+          total_count: @lesson.lesson_comments.count,
+          comments: @new_comments.map do |comment|
+            {
+              id: comment.id,
+              html: render_to_string(
+                partial: "lesson_comments/chat_bubble",
+                locals: { comment: comment },
+                formats: [ :html ]
+              )
+            }
+          end
+        }
+      end
+      format.html do
+        redirect_to lesson_target_path(@lesson, anchor: "comments-section")
+      end
+    end
+  end
 
   def create
     @comment = @lesson.lesson_comments.build(comment_params)
