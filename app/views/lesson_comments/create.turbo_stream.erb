@@ -1,17 +1,12 @@
-<% if @comment.root? %>
-  <%= turbo_stream.remove "no_comments_placeholder" %>
-  <%= turbo_stream.prepend "lesson_comments_list", partial: "lesson_comments/comment", locals: { comment: @comment } %>
-  <%= turbo_stream.replace "new_lesson_comment_form_wrapper", partial: "lesson_comments/form", locals: { lesson: @lesson, parent_id: nil } %>
-<% else %>
-  <%= turbo_stream.append "lesson_comment_#{@comment.parent_id}_replies", partial: "lesson_comments/comment", locals: { comment: @comment } %>
-  <turbo-stream action="replace" target="reply_box_<%= @comment.parent_id %>">
-    <template>
-      <div id="reply_box_<%= @comment.parent_id %>" class="hidden pl-4 sm:pl-6 border-l-2 border-stone-200 mt-2">
-        <%= render partial: "lesson_comments/form", locals: { lesson: @comment.lesson, parent_id: @comment.parent_id } %>
-      </div>
-    </template>
-  </turbo-stream>
-<% end %>
-
+<%= turbo_stream.remove "no_comments_placeholder" %>
+<%= turbo_stream.append "lesson_comments_list", partial: "lesson_comments/chat_bubble", locals: { comment: @comment } %>
 <%= turbo_stream.update "lesson_comments_count", @lesson.lesson_comments.count.to_s %>
 
+<script>
+  (() => {
+    const el = document.getElementById('chat_room_messages');
+    if (el) {
+      requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+    }
+  })();
+</script>

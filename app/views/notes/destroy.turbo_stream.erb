@@ -1,0 +1,3 @@
+<%= turbo_stream.remove "note_#{@note_id}" %>
+<%= turbo_stream.update "flash_messages", partial: "shared/flash" %>
+

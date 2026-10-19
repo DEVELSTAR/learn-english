@@ -20,8 +20,8 @@ ActiveAdmin.register_page "Dashboard" do
               span Lesson.draft.count
             end
             li do
-              strong "Shared Word Lists: "
-              span WordList.created_by_admin.count
+              strong "Community Notes: "
+              span Note.count
             end
           end
         end

@@ -6,7 +6,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should create student user and default word lists" do
+  test "should create student user" do
     assert_difference("User.count", 1) do
       post registration_path, params: {
         user: {
@@ -21,11 +21,6 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     new_user = User.find_by(email_address: "newstudent@example.com")
     assert_not_nil new_user
     assert new_user.student?
-    assert_equal 3, new_user.word_lists.count
-    assert_not_nil new_user.word_lists.find_by(name: "My Words", is_default: true)
-    assert_not_nil new_user.word_lists.find_by(name: "To Learn")
-    assert_not_nil new_user.word_lists.find_by(name: "Revision")
-
     assert_redirected_to root_path
     assert cookies[:session_id]
   end
@@ -44,4 +39,3 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 end
-

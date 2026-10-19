@@ -15,10 +15,6 @@ class GeminiTutorService
     @context_record if @context_record.is_a?(Lesson)
   end
 
-  def word_list
-    @context_record if @context_record.is_a?(WordList)
-  end
-
   def ask(user_message)
     api_key = ENV["GEMINI_API_KEY"].presence || (Rails.application.credentials.gemini_api_key.presence unless Rails.env.test?)
 
@@ -82,15 +78,7 @@ class GeminiTutorService
   end
 
   def build_system_prompt
-    if word_list.present?
-      words = word_list.word_entries.limit(30).map { |e| "- #{e.term}#{": #{e.personal_note}" if e.personal_note.present?}" }.join("\n")
-      context_info = <<~CTX
-        CURRENT VOCABULARY LIST CONTEXT:
-        - List Name: "#{word_list.name}"
-        - Saved Words in this List:
-        #{words.presence || '(No words saved in this list yet)'}
-      CTX
-    elsif lesson.present?
+    if lesson.present?
       lesson_summary = lesson.content&.to_plain_text.to_s.truncate(1500)
       type_label = lesson.topic? ? "Topic" : "Daily Class"
       context_info = <<~CTX
@@ -102,7 +90,7 @@ class GeminiTutorService
         #{lesson_summary.presence || '(No lesson text provided)'}
       CTX
     else
-      context_info = "GENERAL ENGLISH VOCABULARY PRACTICE"
+      context_info = "GENERAL ENGLISH PRACTICE"
     end
 
     <<~PROMPT
@@ -135,8 +123,6 @@ class GeminiTutorService
   def build_contents(current_user_message)
     if lesson.present?
       history = lesson.lesson_chat_messages.where(user: user).recent_for_context(4)
-    elsif word_list.present?
-      history = word_list.word_list_chat_messages.where(user: user).recent_for_context(4)
     else
       history = []
     end
@@ -167,7 +153,7 @@ class GeminiTutorService
   end
 
   def fallback_response(user_message)
-    title_context = lesson&.title || word_list&.name || "English Practice"
+    title_context = lesson&.title || "English Practice"
     <<~MSG
       Namaste #{user.name}! 🙏 Main aapka **AI English Tutor** hoon.
 
@@ -178,7 +164,7 @@ class GeminiTutorService
       - *(Aap 30 seconds mein free key le sakte hain: [aistudio.google.com](https://aistudio.google.com/))*
 
       **Quick Tip for '#{title_context}':**
-      Is context ke keywords se ek sentence banayein aur daily conversation mein use karein!
+      Is context ke concepts se ek sentence banayein aur daily conversation mein use karein!
     MSG
   end
 end

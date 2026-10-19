@@ -66,6 +66,26 @@ ActiveAdmin.register Lesson do
   filter :lesson_date
   filter :status, as: :select, collection: proc { Lesson.statuses.keys }
 
+  csv do
+    column :id
+    column :title
+    column :lesson_type
+    column :lesson_date
+    column :status
+    column :position
+    column :slug
+    column :topic
+    column :introduction
+    column("Author Name") { |lesson| lesson.author&.name }
+    column("Author Email") { |lesson| lesson.author&.email_address }
+    column("Content (HTML)") { |lesson| lesson.content&.body&.to_html }
+    column("Content (Plain Text)") { |lesson| lesson.content&.body&.to_plain_text }
+    column("Completions Count") { |lesson| lesson.lesson_completions.where(completed: true).count }
+    column("Comments Count") { |lesson| lesson.lesson_comments.count }
+    column :created_at
+    column :updated_at
+  end
+
   action_item :publish, only: :show, if: proc { resource.draft? } do
     link_to "Publish Lesson", publish_admin_lesson_path(resource)
   end

@@ -26,7 +26,7 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Get Started with English"
-    assert_includes response.body, "AI Doubt Buster"
+    assert_includes response.body, "Ask Akib Sir"
   end
 
   test "can search topics by query" do

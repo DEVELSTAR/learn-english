@@ -51,11 +51,6 @@
     <% end %>
   </article>
 
-  <!-- Quick Word Saver helper for students reading the lesson -->
-  <% if authenticated? %>
-    <%= render partial: "lessons/word_saver", locals: { lesson: @lesson } %>
-  <% end %>
-
   <!-- Interactive AI English Doubt Buster & Tutor (Powered by Google Gemini 1.5 Flash) -->
   <%= render partial: "lessons/ai_tutor" %>
 

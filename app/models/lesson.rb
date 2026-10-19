@@ -2,7 +2,6 @@ class Lesson < ApplicationRecord
   belongs_to :author, class_name: "User", optional: true
   has_rich_text :content
   has_many :lesson_completions, dependent: :destroy
-  has_many :word_entries, dependent: :nullify
   has_many :lesson_chat_messages, dependent: :destroy
   has_many :lesson_comments, dependent: :destroy
   has_many :root_lesson_comments, -> { root_comments.chronological }, class_name: "LessonComment"
@@ -35,7 +34,7 @@ class Lesson < ApplicationRecord
   end
 
   def self.ransackable_associations(auth_object = nil)
-    %w[author lesson_completions word_entries lesson_comments]
+    %w[author lesson_completions lesson_comments]
   end
 
   def to_param

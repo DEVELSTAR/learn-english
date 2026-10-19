@@ -26,12 +26,10 @@ class LessonsController < ApplicationController
 
     @previous_lesson = @lesson.previous_lesson
     @next_lesson = @lesson.next_lesson
-    @comments = @lesson.lesson_comments.includes(:user, replies: :user).root_comments.recent_first
+    @comments = @lesson.lesson_comments.includes(:user).chronological
     
     if authenticated?
       @completion = current_user.lesson_completions.find_or_initialize_by(lesson: @lesson)
-      @user_word_lists = current_user.word_lists.default_first
-      @saved_word_terms = current_user.word_entries.pluck(:term).map(&:downcase)
       @chat_messages = @lesson.lesson_chat_messages.where(user: current_user).chronological
     end
   end

@@ -20,23 +20,7 @@ Rails.application.routes.draw do
     resources :comments, only: %i[create destroy], controller: "lesson_comments"
   end
 
-  resources :word_lists, only: %i[index show create destroy] do
-    member do
-      delete :clear_chat
-    end
-    resources :chat_messages, only: %i[create], module: :word_lists
-  end
-  resources :word_entries, only: %i[create update destroy] do
-    member do
-      post :toggle_revision
-      patch :update_status
-    end
-  end
-
-  get "revision", to: "revisions#index", as: :revision
-  post "revision/:id/reviewed", to: "revisions#reviewed", as: :revision_reviewed
-
-
+  resources :notes, only: %i[index create edit update destroy]
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

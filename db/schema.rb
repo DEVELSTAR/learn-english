@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_19_121500) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_183500) do
   create_table "action_text_rich_texts", force: :cascade do |t|
     t.string "name", null: false
     t.text "body"
@@ -118,6 +118,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_121500) do
     t.index ["status"], name: "index_lessons_on_status"
   end
 
+  create_table "notes", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "title"
+    t.index ["user_id", "created_at"], name: "index_notes_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_notes_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "ip_address"
@@ -138,47 +148,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_121500) do
     t.index ["role"], name: "index_users_on_role"
   end
 
-  create_table "word_entries", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "word_list_id", null: false
-    t.integer "lesson_id"
-    t.string "term", null: false
-    t.text "personal_note"
-    t.integer "status", default: 0, null: false
-    t.boolean "needs_revision", default: false, null: false
-    t.datetime "last_reviewed_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["lesson_id"], name: "index_word_entries_on_lesson_id"
-    t.index ["user_id", "needs_revision"], name: "index_word_entries_on_user_id_and_needs_revision"
-    t.index ["user_id", "status"], name: "index_word_entries_on_user_id_and_status"
-    t.index ["user_id", "term"], name: "index_word_entries_on_user_id_and_term"
-    t.index ["user_id"], name: "index_word_entries_on_user_id"
-    t.index ["word_list_id"], name: "index_word_entries_on_word_list_id"
-  end
-
-  create_table "word_list_chat_messages", force: :cascade do |t|
-    t.integer "word_list_id", null: false
-    t.integer "user_id", null: false
-    t.string "role", null: false
-    t.text "content", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_word_list_chat_messages_on_user_id"
-    t.index ["word_list_id", "user_id", "created_at"], name: "idx_on_word_list_id_user_id_created_at_cb136c3cea"
-    t.index ["word_list_id"], name: "index_word_list_chat_messages_on_word_list_id"
-  end
-
-  create_table "word_lists", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.string "name", null: false
-    t.boolean "is_default", default: false, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id", "name"], name: "index_word_lists_on_user_id_and_name", unique: true
-    t.index ["user_id"], name: "index_word_lists_on_user_id"
-  end
-
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "lesson_blocks", "lessons", on_delete: :cascade
@@ -190,11 +159,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_121500) do
   add_foreign_key "lesson_completions", "lessons", on_delete: :cascade
   add_foreign_key "lesson_completions", "users", on_delete: :cascade
   add_foreign_key "lessons", "users", column: "author_id"
+  add_foreign_key "notes", "users"
   add_foreign_key "sessions", "users"
-  add_foreign_key "word_entries", "lessons", on_delete: :nullify
-  add_foreign_key "word_entries", "users", on_delete: :cascade
-  add_foreign_key "word_entries", "word_lists", on_delete: :cascade
-  add_foreign_key "word_list_chat_messages", "users"
-  add_foreign_key "word_list_chat_messages", "word_lists"
-  add_foreign_key "word_lists", "users", on_delete: :cascade
 end

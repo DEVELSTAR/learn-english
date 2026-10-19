@@ -2,12 +2,10 @@ class User < ApplicationRecord
   has_secure_password
   has_many :sessions, dependent: :destroy
   has_many :lessons, foreign_key: :author_id, dependent: :nullify
-  has_many :word_lists, dependent: :destroy
-  has_many :word_entries, dependent: :destroy
   has_many :lesson_completions, dependent: :destroy
   has_many :lesson_chat_messages, dependent: :destroy
-  has_many :word_list_chat_messages, dependent: :destroy
   has_many :lesson_comments, dependent: :destroy
+  has_many :notes, dependent: :destroy
 
   enum :role, { student: 0, admin: 1, super_admin: 2 }, default: :student
 
@@ -37,16 +35,6 @@ class User < ApplicationRecord
   end
 
   def self.ransackable_associations(auth_object = nil)
-    %w[lessons word_lists word_entries lesson_completions lesson_comments]
-  end
-
-  after_create :create_default_word_lists, if: :student?
-
-  private
-
-  def create_default_word_lists
-    word_lists.find_or_create_by!(name: "My Words", is_default: true)
-    word_lists.find_or_create_by!(name: "To Learn", is_default: false)
-    word_lists.find_or_create_by!(name: "Revision", is_default: false)
+    %w[lessons lesson_completions lesson_comments notes]
   end
 end

@@ -8,33 +8,19 @@ class LessonCommentsController < ApplicationController
     @comment = @lesson.lesson_comments.build(comment_params)
     @comment.user = current_user
 
-    if @comment.parent_id.present?
-      parent = @lesson.lesson_comments.find_by(id: @comment.parent_id)
-      if parent
-        # Keep replies flat under the root comment for a cleaner threaded experience
-        @comment.parent = parent.root? ? parent : parent.parent
-      else
-        @comment.parent_id = nil
-      end
-    end
-
     if @comment.save
       respond_to do |format|
         format.turbo_stream
         format.html do
           redirect_to lesson_target_path(@lesson, anchor: "lesson_comment_#{@comment.id}"),
-                      notice: "Comment posted!"
+                      notice: "Message sent!"
         end
       end
     else
       respond_to do |format|
         format.turbo_stream do
-          target_dom_id = @comment.parent_id.present? ? "reply_form_lesson_comment_#{@comment.parent_id}" : "new_lesson_comment_form_wrapper"
-          render turbo_stream: turbo_stream.replace(
-            target_dom_id,
-            partial: "lesson_comments/form",
-            locals: { lesson: @lesson, comment: @comment, parent_id: @comment.parent_id }
-          )
+          flash.now[:alert] = @comment.errors.full_messages.to_sentence
+          render turbo_stream: turbo_stream.update("flash_messages", partial: "shared/flash")
         end
         format.html do
           redirect_to lesson_target_path(@lesson, anchor: "comments-section"),
@@ -54,12 +40,11 @@ class LessonCommentsController < ApplicationController
     end
 
     @comment_id = @comment.id
-    @parent = @comment.parent
     @comment.destroy
 
     respond_to do |format|
       format.turbo_stream
-      format.html { redirect_to lesson_target_path(@lesson, anchor: "comments-section"), notice: "Comment deleted." }
+      format.html { redirect_to lesson_target_path(@lesson, anchor: "comments-section"), notice: "Message deleted." }
     end
   end
 
@@ -78,4 +63,3 @@ class LessonCommentsController < ApplicationController
     params.require(:lesson_comment).permit(:content, :parent_id)
   end
 end
-

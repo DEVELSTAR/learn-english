@@ -63,8 +63,8 @@ ActiveAdmin.register User, as: "Student" do
     column "Lessons Completed" do |student|
       status_tag "#{student.lesson_completions.where(completed: true).count} completed", class: "ok"
     end
-    column "Words Saved" do |student|
-      student.word_entries.count
+    column "Notes Contributed" do |student|
+      student.notes.count
     end
     actions
   end
@@ -95,8 +95,8 @@ ActiveAdmin.register User, as: "Student" do
       row "Total Lessons Completed" do |student|
         student.lesson_completions.where(completed: true).count
       end
-      row "Total Words Saved" do |student|
-        student.word_entries.count
+      row "Total Notes Contributed" do |student|
+        student.notes.count
       end
       row :created_at
       row :updated_at
@@ -117,17 +117,17 @@ ActiveAdmin.register User, as: "Student" do
       end
     end
 
-    panel "Student Word Lists" do
-      lists = student.word_lists.default_first
-      if lists.any?
-        table_for lists do
-          column("List Name") { |l| l.name }
-          column("Type") { |l| status_tag(l.is_default? ? "Default" : "Custom") }
-          column("Words") { |l| l.word_entries.count }
+    panel "Notes Contributed" do
+      notes = student.notes.recent
+      if notes.any?
+        table_for notes do
+          column("Title") { |n| link_to n.title, admin_note_path(n) }
+          column("Content") { |n| truncate(n.content, length: 100) }
+          column("Created") { |n| n.created_at.strftime("%B %d, %Y") }
         end
       else
         div class: "blank_slate_container" do
-          span "No word lists found."
+          span "No notes contributed yet."
         end
       end
     end

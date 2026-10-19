@@ -13,20 +13,6 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.errors[:email_address], "can't be blank"
   end
 
-  test "creates default word lists for student on creation" do
-    user = User.create!(name: "Arun", email_address: "arun@example.com", password: "password", role: :student)
-    assert_equal 3, user.word_lists.count
-    assert_equal ["My Words", "To Learn", "Revision"].sort, user.word_lists.pluck(:name).sort
-  end
-
-  test "does not create word lists for admin or super_admin" do
-    admin = User.create!(name: "Admin Two", email_address: "admintwo@example.com", password: "password", role: :admin)
-    assert_equal 0, admin.word_lists.count
-
-    super_admin = User.create!(name: "Super Two", email_address: "supertwo@example.com", password: "password", role: :super_admin)
-    assert_equal 0, super_admin.word_lists.count
-  end
-
   test "role helper methods work correctly" do
     super_admin = users(:super_admin)
     admin = users(:admin)

@@ -1,35 +1,17 @@
 <% if authenticated? %>
   <div class="space-y-8">
-    <!-- Top Welcome & Quick-Add Word Bar -->
-    <div class="bg-white border border-stone-200 rounded-xl p-6 shadow-xs">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-        <div>
-          <h1 class="text-xl font-bold text-stone-900">Namaste, <%= current_user.name.split.first %>!</h1>
-          <p class="text-xs text-stone-500 mt-0.5">Notice a new English word today? Save it immediately so you can master it later.</p>
-        </div>
-        <div class="flex items-center gap-3 text-xs text-stone-500">
-          <span class="px-2.5 py-1 bg-stone-100 rounded-full font-medium">
-            <%= @completed_count %> <%= "class".pluralize(@completed_count) %> completed
-          </span>
-          <span class="px-2.5 py-1 bg-stone-100 rounded-full font-medium">
-            <%= current_user.word_entries.count %> <%= "word".pluralize(current_user.word_entries.count) %> saved
-          </span>
-        </div>
+    <!-- Top Welcome Banner -->
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-stone-900">Namaste, <%= current_user.name.split.first %>!</h1>
+        <p class="text-xs text-stone-500 mt-1">Ready to learn and practice English today? Check out daily classes or read community notes.</p>
       </div>
-
-      <!-- Quick Add Form -->
-      <%= form_with model: WordEntry.new, url: word_entries_path, class: "flex flex-col sm:flex-row items-stretch gap-2.5" do |f| %>
-        <%= hidden_field_tag :return_to, root_path %>
-        <div class="flex-1">
-          <%= f.text_field :term, required: true, placeholder: "Type a word or phrase (e.g. compare, take for granted)...", class: "w-full rounded-lg border border-stone-300 px-3.5 py-2 text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900 text-sm" %>
-        </div>
-        <div class="sm:w-56">
-          <%= f.collection_select :word_list_id, @word_lists, :id, :name, { selected: @default_list&.id }, class: "w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-900 focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900 text-sm bg-white" %>
-        </div>
-        <div>
-          <%= f.submit "Quick Save", class: "w-full sm:w-auto px-5 py-2 rounded-lg bg-stone-900 text-white font-medium text-sm hover:bg-stone-800 transition cursor-pointer" %>
-        </div>
-      <% end %>
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 bg-stone-100 rounded-full text-xs font-semibold text-stone-700 font-mono">
+          <%= @completed_count %> <%= "class".pluralize(@completed_count) %> completed
+        </span>
+        <%= link_to "View Notes", notes_path, class: "px-3.5 py-1.5 bg-stone-900 text-white rounded-xl text-xs font-semibold hover:bg-stone-800 transition shadow-2xs" %>
+      </div>
     </div>
 
     <!-- Featured / Today's Lesson Banner -->
@@ -65,7 +47,7 @@
 
         <% if !@today_lesson %>
           <p class="text-xs text-stone-400 mb-6 italic">
-            No new lesson published for today yet. Revise this latest class or review your saved vocabulary below!
+            No new lesson published for today yet. Revise this latest class or explore community notes below!
           </p>
         <% end %>
 
@@ -91,50 +73,44 @@
       <div class="bg-white border border-stone-200 rounded-xl p-8 text-center">
         <h2 class="text-lg font-semibold text-stone-800">Welcome to Learn English!</h2>
         <p class="text-sm text-stone-500 mt-1 max-w-md mx-auto">
-          The teacher is currently preparing lessons. In the meantime, feel free to add your own words to your personal vocabulary lists!
+          The teacher is currently preparing lessons. In the meantime, feel free to browse foundational topics or contribute to community notes!
         </p>
       </div>
     <% end %>
 
     <!-- 2-Column Dashboard Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Left Column (2 spans): Recent Classes & Revision Queue -->
+      <!-- Left Column (2 spans): Recent Classes & Community Notes -->
       <div class="lg:col-span-2 space-y-8">
-        <!-- Words Due For Revision -->
+        <!-- Community Notes & Daily Sentences -->
         <div class="bg-white border border-stone-200 rounded-xl p-6 shadow-xs">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h3 class="text-base font-bold text-stone-900">Words For Revision</h3>
-              <p class="text-xs text-stone-500">Revise words to build long-term active recall.</p>
+              <h3 class="text-base font-bold text-stone-900">Community Notes & Sentences</h3>
+              <p class="text-xs text-stone-500">Daily useful sentences, idioms, and notes shared by everyone.</p>
             </div>
-            <%= link_to "View all (#{current_user.word_entries.due_for_revision.count})", revision_path, class: "text-xs font-semibold text-stone-700 hover:text-stone-900 transition" %>
+            <%= link_to "View all notes →", notes_path, class: "text-xs font-semibold text-stone-700 hover:text-stone-900 transition" %>
           </div>
 
-          <% if @words_due_revision.any? %>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <% @words_due_revision.each do |entry| %>
-                <div class="p-3 rounded-lg border border-stone-200 bg-stone-50/50 hover:bg-white hover:border-stone-300 transition flex items-center justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="font-semibold text-stone-900 text-sm truncate"><%= entry.term %></p>
-                    <% if entry.personal_note.present? %>
-                      <p class="text-xs text-stone-500 truncate"><%= entry.personal_note %></p>
-                    <% else %>
-                      <p class="text-xs text-stone-400 italic">No notes added</p>
-                    <% end %>
+          <% if @recent_notes&.any? %>
+            <div class="space-y-3">
+              <% @recent_notes.each do |note| %>
+                <%= link_to notes_path, class: "block p-3.5 rounded-lg border border-stone-200 hover:border-stone-300 hover:bg-stone-50/50 transition group" do %>
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="font-bold text-stone-900 text-sm group-hover:text-emerald-700 transition truncate"><%= note.title %></p>
+                    <span class="text-[11px] font-mono text-stone-400 shrink-0"><%= time_ago_in_words(note.updated_at) %> ago</span>
                   </div>
-                  <div class="flex items-center gap-1 shrink-0">
-                    <% if entry.needs_revision? %>
-                      <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-medium">Revision</span>
-                    <% else %>
-                      <span class="text-[10px] bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded font-medium"><%= entry.status.humanize %></span>
-                    <% end %>
+                  <p class="text-xs text-stone-600 line-clamp-2 mt-1 whitespace-pre-line"><%= note.content.truncate(150) %></p>
+                  <div class="mt-2 text-[11px] text-stone-400 flex items-center gap-1.5">
+                    <span>By <%= note.user&.name || "Community" %></span>
                   </div>
-                </div>
+                <% end %>
               <% end %>
             </div>
           <% else %>
             <div class="p-6 text-center text-xs text-stone-500 bg-stone-50 rounded-lg">
-              No words marked for revision right now. Great job keeping your list up to date!
+              No community notes added yet.
+              <%= link_to "Be the first to share daily sentences →", notes_path, class: "block mt-1 font-semibold text-stone-700 hover:text-stone-900" %>
             </div>
           <% end %>
         </div>
@@ -204,29 +180,18 @@
         </div>
       </div>
 
-      <!-- Right Column (1 span): Word Lists & Quick Stats -->
+      <!-- Right Column (1 span): Quick Actions & Learning Tips -->
       <div class="space-y-6">
-        <!-- My Lists -->
+        <!-- Community Notes Shortcut -->
         <div class="bg-white border border-stone-200 rounded-xl p-6 shadow-xs">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-base font-bold text-stone-900">My Word Lists</h3>
-            <%= link_to "Manage", word_lists_path, class: "text-xs font-semibold text-stone-700 hover:text-stone-900 transition" %>
+            <h3 class="text-base font-bold text-stone-900">Daily Notes</h3>
+            <%= link_to "Open Board", notes_path, class: "text-xs font-semibold text-stone-700 hover:text-stone-900 transition" %>
           </div>
-          <div class="space-y-2">
-            <% @word_lists.each do |list| %>
-              <%= link_to word_list_path(list), class: "flex items-center justify-between p-3 rounded-lg border border-stone-100 hover:border-stone-300 hover:bg-stone-50 transition group" do %>
-                <span class="text-sm font-medium text-stone-800 group-hover:text-stone-900">
-                  <%= list.name %>
-                  <% if list.is_default? %>
-                    <span class="text-[10px] text-stone-400 ml-1">(default)</span>
-                  <% end %>
-                </span>
-                <span class="text-xs px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 font-mono">
-                  <%= list.word_entries.count %>
-                </span>
-              <% end %>
-            <% end %>
-          </div>
+          <p class="text-xs text-stone-600 leading-relaxed mb-4">
+            Share daily sentences, phrases, and grammar tips. Everyone can view and collaborate on notes!
+          </p>
+          <%= link_to "+ Share New Note", notes_path, class: "block w-full py-2.5 px-3 rounded-lg bg-stone-900 text-white font-semibold text-xs text-center hover:bg-stone-800 transition" %>
         </div>
 
         <!-- Learning Tip Card -->
