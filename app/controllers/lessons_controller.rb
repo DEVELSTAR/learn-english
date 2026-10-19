@@ -26,6 +26,7 @@ class LessonsController < ApplicationController
 
     @previous_lesson = @lesson.previous_lesson
     @next_lesson = @lesson.next_lesson
+    @comments = @lesson.lesson_comments.includes(:user, replies: :user).root_comments.recent_first
     
     if authenticated?
       @completion = current_user.lesson_completions.find_or_initialize_by(lesson: @lesson)

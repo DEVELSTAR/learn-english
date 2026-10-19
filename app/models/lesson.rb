@@ -4,6 +4,8 @@ class Lesson < ApplicationRecord
   has_many :lesson_completions, dependent: :destroy
   has_many :word_entries, dependent: :nullify
   has_many :lesson_chat_messages, dependent: :destroy
+  has_many :lesson_comments, dependent: :destroy
+  has_many :root_lesson_comments, -> { root_comments.chronological }, class_name: "LessonComment"
 
   enum :status, { draft: 0, published: 1, archived: 2 }, default: :draft
   enum :lesson_type, { daily_class: 0, topic: 1 }, default: :daily_class
@@ -33,7 +35,7 @@ class Lesson < ApplicationRecord
   end
 
   def self.ransackable_associations(auth_object = nil)
-    %w[author lesson_completions word_entries]
+    %w[author lesson_completions word_entries lesson_comments]
   end
 
   def to_param

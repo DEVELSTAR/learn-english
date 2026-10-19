@@ -7,6 +7,7 @@ class User < ApplicationRecord
   has_many :lesson_completions, dependent: :destroy
   has_many :lesson_chat_messages, dependent: :destroy
   has_many :word_list_chat_messages, dependent: :destroy
+  has_many :lesson_comments, dependent: :destroy
 
   enum :role, { student: 0, admin: 1, super_admin: 2 }, default: :student
 
@@ -36,7 +37,7 @@ class User < ApplicationRecord
   end
 
   def self.ransackable_associations(auth_object = nil)
-    %w[lessons word_lists word_entries lesson_completions]
+    %w[lessons word_lists word_entries lesson_completions lesson_comments]
   end
 
   after_create :create_default_word_lists, if: :student?

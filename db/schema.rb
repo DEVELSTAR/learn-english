@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_084206) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_121500) do
   create_table "action_text_rich_texts", force: :cascade do |t|
     t.string "name", null: false
     t.text "body"
@@ -70,6 +70,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_084206) do
     t.index ["lesson_id", "user_id", "created_at"], name: "idx_on_lesson_id_user_id_created_at_f5acf941bb"
     t.index ["lesson_id"], name: "index_lesson_chat_messages_on_lesson_id"
     t.index ["user_id"], name: "index_lesson_chat_messages_on_user_id"
+  end
+
+  create_table "lesson_comments", force: :cascade do |t|
+    t.integer "lesson_id", null: false
+    t.integer "user_id", null: false
+    t.integer "parent_id"
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lesson_id", "created_at"], name: "index_lesson_comments_on_lesson_id_and_created_at"
+    t.index ["lesson_id"], name: "index_lesson_comments_on_lesson_id"
+    t.index ["parent_id"], name: "index_lesson_comments_on_parent_id"
+    t.index ["user_id"], name: "index_lesson_comments_on_user_id"
   end
 
   create_table "lesson_completions", force: :cascade do |t|
@@ -171,6 +184,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_084206) do
   add_foreign_key "lesson_blocks", "lessons", on_delete: :cascade
   add_foreign_key "lesson_chat_messages", "lessons"
   add_foreign_key "lesson_chat_messages", "users"
+  add_foreign_key "lesson_comments", "lesson_comments", column: "parent_id"
+  add_foreign_key "lesson_comments", "lessons"
+  add_foreign_key "lesson_comments", "users"
   add_foreign_key "lesson_completions", "lessons", on_delete: :cascade
   add_foreign_key "lesson_completions", "users", on_delete: :cascade
   add_foreign_key "lessons", "users", column: "author_id"

@@ -5,6 +5,17 @@ compare_lesson:
   topic: "Everyday Verbs"
   introduction: "Learn the deep nuance of compare."
   status: 1
+  lesson_type: 0
+  author: admin
+
+topic_lesson:
+  title: "Foundational Grammar Topic"
+  slug: "foundational-grammar-topic"
+  lesson_date: <%= Date.current %>
+  topic: "Grammar"
+  introduction: "Core concepts."
+  status: 1
+  lesson_type: 1
   author: admin
 
 draft_lesson:
@@ -14,5 +25,5 @@ draft_lesson:
   topic: "Upcoming"
   introduction: "This is a secret draft."
   status: 0
+  lesson_type: 0
   author: admin
-

@@ -1,0 +1,53 @@
+<% parent_id ||= nil %>
+<% comment ||= LessonComment.new(parent_id: parent_id) %>
+<% placeholder ||= (parent_id ? "Write a reply..." : "Ask a question, share an example sentence, or chat with classmates...") %>
+<% form_dom_id = parent_id ? "reply_form_lesson_comment_#{parent_id}_inner" : "new_lesson_comment_form" %>
+
+<div id="<%= parent_id ? "reply_form_lesson_comment_#{parent_id}" : "new_lesson_comment_form_wrapper" %>" class="<%= parent_id ? 'mt-3 pt-3 border-t border-stone-100' : '' %>">
+  <%= form_with model: comment, url: lesson_comment_path_for(lesson), id: form_dom_id, class: "space-y-3", data: { turbo: true } do |f| %>
+    <% if parent_id %>
+      <%= f.hidden_field :parent_id, value: parent_id %>
+    <% end %>
+
+    <% if comment.errors.any? %>
+      <div class="rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-xs text-rose-700">
+        <%= comment.errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+
+    <div class="flex gap-3 items-start">
+      <%= user_avatar_badge(current_user, size: parent_id ? :sm : :md) %>
+
+      <div class="flex-1 min-w-0">
+        <%= f.text_area :content,
+                        rows: parent_id ? 2 : 3,
+                        placeholder: placeholder,
+                        required: true,
+                        class: "w-full rounded-xl border border-stone-200 bg-white p-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition resize-y shadow-2xs leading-relaxed" %>
+
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <span class="text-[11px] text-stone-400">
+            <%= parent_id ? "Replying to discussion" : "Share questions or practice sentences" %>
+          </span>
+          <div class="flex items-center gap-2">
+            <% if parent_id %>
+              <button type="button"
+                      onclick="document.getElementById('reply_box_<%= parent_id %>').classList.add('hidden')"
+                      class="px-3 py-1.5 text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition cursor-pointer">
+                Cancel
+              </button>
+            <% end %>
+            <%= f.button type: :submit,
+                         class: "inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-stone-900 hover:bg-stone-800 rounded-lg shadow-xs transition active:scale-95 cursor-pointer" do %>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              <span><%= parent_id ? "Reply" : "Post Comment" %></span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
