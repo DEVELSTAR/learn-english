@@ -13,8 +13,7 @@ puts "Super Admin: #{super_admin.email_address} (ID: #{super_admin.id}, Role: #{
 
 puts "\n== Ensuring Sample Community Notes Exist =="
 if Note.none?
-  sample_note = Note.find_or_initialize_by(title: "Daily Use Spoken English Sentences")
-  sample_note.user = super_admin
+  sample_note = Note.new(user: super_admin, is_global: true)
   sample_note.content = <<~NOTE.strip
     1. Could you please give me a hand? — Kya aap meri thodi madad kar sakte hain?
     2. I'm on my way, will be there in ten minutes. — Main raaste mein hoon, 10 minute mein pahunchta hoon.
@@ -28,7 +27,7 @@ if Note.none?
     10. Let's wrap things up for today. — Chalo aaj ka kaam yahin khatam karte hain.
   NOTE
   sample_note.save!
-  puts "Created sample note: #{sample_note.title}"
+  puts "Created sample global note: ID #{sample_note.id}"
 end
 
 puts "\n== Seeding Completed Successfully! =="

@@ -107,10 +107,28 @@ export default class extends Controller {
     }
   }
 
+  autoResize(event) {
+    const textarea = event.target
+    textarea.style.height = "auto"
+    textarea.style.height = Math.min(textarea.scrollHeight, 160) + "px"
+  }
+
+  handleKeydown(event) {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault()
+      if (this.hasFormTarget) {
+        this.formTarget.requestSubmit()
+      } else {
+        event.target.form?.requestSubmit()
+      }
+    }
+  }
+
   reset() {
     const input = this.element.querySelector("#chat_message_input")
     if (input) {
       input.value = ""
+      input.style.height = "auto"
       input.focus()
     }
     setTimeout(() => this.scrollToBottom(), 50)

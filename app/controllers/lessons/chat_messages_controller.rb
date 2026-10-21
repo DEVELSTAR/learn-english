@@ -3,6 +3,14 @@ module Lessons
     before_action :set_lesson
 
     def create
+      if current_user&.regular_admin?
+        respond_to do |format|
+          format.turbo_stream { head :forbidden }
+          format.html { redirect_to admin_root_path, alert: "Administrators cannot chat with the AI tutor." }
+        end
+        return
+      end
+
       content = params[:content].to_s.strip
 
       if content.blank?

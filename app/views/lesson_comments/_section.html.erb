@@ -38,16 +38,20 @@
                       chat_room_target: "form",
                       action: "turbo:submit-end->chat-room#reset"
                     } do |f| %>
-        <div class="flex items-center gap-2">
-          <%= f.text_field :content,
-                           id: "chat_message_input",
-                           placeholder: "Type a message...",
-                           required: true,
-                           autocomplete: "off",
-                           class: "flex-1 rounded-lg border border-stone-300 bg-stone-50/50 px-3.5 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition" %>
+        <div class="flex items-end gap-2">
+          <%= f.text_area :content,
+                          id: "chat_message_input",
+                          placeholder: "Type a message... (Shift+Enter for new line)",
+                          required: true,
+                          rows: 1,
+                          autocomplete: "off",
+                          data: {
+                            action: "input->chat-room#autoResize keydown->chat-room#handleKeydown"
+                          },
+                          class: "flex-1 min-h-[42px] max-h-[160px] rounded-lg border border-stone-300 bg-stone-50/50 px-3.5 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition resize-y leading-relaxed font-sans" %>
 
           <%= f.button type: :submit,
-                       class: "px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs shrink-0" do %>
+                       class: "h-[42px] px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs shrink-0" do %>
             <span>Send</span>
             <svg style="width: 14px; height: 14px;" class="shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>

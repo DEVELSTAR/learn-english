@@ -1,6 +1,7 @@
 class LessonsController < ApplicationController
   allow_unauthenticated_access only: %i[index show]
   before_action :set_lesson, only: %i[show toggle_completion toggle_revision clear_chat]
+  before_action :restrict_admin_actions!, only: %i[toggle_completion toggle_revision clear_chat]
 
   def index
     @lessons = Lesson.published.daily_classes.by_date_desc
@@ -98,6 +99,12 @@ class LessonsController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     # Fallback to integer id if needed
     @lesson = Lesson.find(params[:id])
+  end
+
+  def restrict_admin_actions!
+    if current_user&.admin?
+      redirect_to admin_root_path, alert: "Student tracking actions are for students only."
+    end
   end
 end
 

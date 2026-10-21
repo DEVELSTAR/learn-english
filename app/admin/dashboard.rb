@@ -19,10 +19,6 @@ ActiveAdmin.register_page "Dashboard" do
               strong "Draft Lessons: "
               span Lesson.draft.count
             end
-            li do
-              strong "Community Notes: "
-              span Note.count
-            end
           end
         end
       end

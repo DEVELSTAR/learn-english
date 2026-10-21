@@ -5,6 +5,7 @@ class Lesson < ApplicationRecord
   has_many :lesson_chat_messages, dependent: :destroy
   has_many :lesson_comments, dependent: :destroy
   has_many :root_lesson_comments, -> { root_comments.chronological }, class_name: "LessonComment"
+  has_many :notes, dependent: :nullify
 
   enum :status, { draft: 0, published: 1, archived: 2 }, default: :draft
   enum :lesson_type, { daily_class: 0, topic: 1 }, default: :daily_class

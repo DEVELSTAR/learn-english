@@ -11,10 +11,26 @@ export default class extends Controller {
     const prompt = event.currentTarget.dataset.prompt
     if (this.hasInputTarget && prompt) {
       this.inputTarget.value = prompt
+      this.inputTarget.style.height = "auto"
+      this.inputTarget.style.height = Math.min(this.inputTarget.scrollHeight, 160) + "px"
       this.inputTarget.focus()
       // Move cursor to end
       const len = this.inputTarget.value.length
       this.inputTarget.setSelectionRange(len, len)
+    }
+  }
+
+  autoResize(event) {
+    const textarea = event.target
+    textarea.style.height = "auto"
+    textarea.style.height = Math.min(textarea.scrollHeight, 160) + "px"
+  }
+
+  handleKeydown(event) {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault()
+      const form = this.element.querySelector("#chat_message_form")
+      form?.requestSubmit()
     }
   }
 
@@ -46,6 +62,8 @@ export default class extends Controller {
       this.indicatorTarget.style.display = "none"
     }
     if (this.hasInputTarget) {
+      this.inputTarget.value = ""
+      this.inputTarget.style.height = "auto"
       this.inputTarget.focus()
     }
     this.scrollToBottom()

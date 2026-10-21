@@ -21,6 +21,12 @@ Rails.application.routes.draw do
   end
 
   resources :notes, only: %i[index create edit update destroy]
+  resources :note_shares, only: %i[create destroy] do
+    member do
+      post :accept
+      post :decline
+    end
+  end
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

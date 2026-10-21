@@ -47,7 +47,7 @@
     </div>
 
     <!-- Admin moderation delete button -->
-    <% if authenticated? && current_user.admin? %>
+    <% if authenticated? && current_user.super_admin? %>
       <div class="opacity-0 group-hover:opacity-100 transition-opacity self-center">
         <%= button_to lesson_comment_path_for(comment.lesson, comment),
                       method: :delete,

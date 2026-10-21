@@ -63,9 +63,6 @@ ActiveAdmin.register User, as: "Student" do
     column "Lessons Completed" do |student|
       status_tag "#{student.lesson_completions.where(completed: true).count} completed", class: "ok"
     end
-    column "Notes Contributed" do |student|
-      student.notes.count
-    end
     actions
   end
 
@@ -95,9 +92,6 @@ ActiveAdmin.register User, as: "Student" do
       row "Total Lessons Completed" do |student|
         student.lesson_completions.where(completed: true).count
       end
-      row "Total Notes Contributed" do |student|
-        student.notes.count
-      end
       row :created_at
       row :updated_at
     end
@@ -113,21 +107,6 @@ ActiveAdmin.register User, as: "Student" do
       else
         div class: "blank_slate_container" do
           span "No completed lessons yet."
-        end
-      end
-    end
-
-    panel "Notes Contributed" do
-      notes = student.notes.recent
-      if notes.any?
-        table_for notes do
-          column("Title") { |n| link_to n.title, admin_note_path(n) }
-          column("Content") { |n| truncate(n.content, length: 100) }
-          column("Created") { |n| n.created_at.strftime("%B %d, %Y") }
-        end
-      else
-        div class: "blank_slate_container" do
-          span "No notes contributed yet."
         end
       end
     end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_19_183500) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_185000) do
   create_table "action_text_rich_texts", force: :cascade do |t|
     t.string "name", null: false
     t.text "body"
@@ -118,12 +118,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_183500) do
     t.index ["status"], name: "index_lessons_on_status"
   end
 
+  create_table "note_shares", force: :cascade do |t|
+    t.integer "note_id", null: false
+    t.integer "user_id", null: false
+    t.boolean "can_edit", default: false, null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["note_id", "user_id"], name: "index_note_shares_on_note_id_and_user_id", unique: true
+    t.index ["note_id"], name: "index_note_shares_on_note_id"
+    t.index ["user_id", "status"], name: "index_note_shares_on_user_id_and_status"
+    t.index ["user_id"], name: "index_note_shares_on_user_id"
+  end
+
   create_table "notes", force: :cascade do |t|
     t.integer "user_id", null: false
     t.text "content", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "title"
+    t.integer "lesson_id"
+    t.boolean "is_global", default: true, null: false
+    t.index ["lesson_id"], name: "index_notes_on_lesson_id"
     t.index ["user_id", "created_at"], name: "index_notes_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_notes_on_user_id"
   end
@@ -159,6 +174,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_183500) do
   add_foreign_key "lesson_completions", "lessons", on_delete: :cascade
   add_foreign_key "lesson_completions", "users", on_delete: :cascade
   add_foreign_key "lessons", "users", column: "author_id"
+  add_foreign_key "note_shares", "notes", on_delete: :cascade
+  add_foreign_key "note_shares", "users", on_delete: :cascade
+  add_foreign_key "notes", "lessons"
   add_foreign_key "notes", "users"
   add_foreign_key "sessions", "users"
 end

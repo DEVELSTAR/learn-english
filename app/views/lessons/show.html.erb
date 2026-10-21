@@ -1,9 +1,23 @@
 <% content_for :title, @lesson.title %>
 
 <div class="max-w-3xl mx-auto space-y-8">
+  <% if admin? %>
+    <div class="rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="font-bold uppercase tracking-wider text-[11px] bg-amber-200/80 px-2 py-0.5 rounded">Admin Preview</span>
+        <span>Viewing published content in read-only mode. Comments, chat, and notes are restricted to students.</span>
+      </div>
+      <%= link_to "← Back to Admin Panel", admin_root_path, class: "font-semibold underline hover:text-amber-950 shrink-0 ml-3" %>
+    </div>
+  <% end %>
+
   <!-- Back navigation & Admin controls -->
   <div class="flex items-center justify-between text-xs text-stone-500">
-    <%= link_to (@lesson.topic? ? "← Back to topics" : "← Back to all classes"), (@lesson.topic? ? topics_path : lessons_path), class: "hover:text-stone-900 transition flex items-center gap-1 font-medium" %>
+    <% if admin? %>
+      <%= link_to "← Back to Admin Panel", admin_root_path, class: "hover:text-stone-900 transition flex items-center gap-1 font-semibold" %>
+    <% else %>
+      <%= link_to (@lesson.topic? ? "← Back to topics" : "← Back to all classes"), (@lesson.topic? ? topics_path : lessons_path), class: "hover:text-stone-900 transition flex items-center gap-1 font-medium" %>
+    <% end %>
     <% if admin? %>
       <div class="flex items-center gap-2">
         <span class="text-[11px] px-2 py-0.5 rounded font-mono font-bold <%= @lesson.published? ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
@@ -33,7 +47,7 @@
     </h1>
 
     <!-- Student completion controls -->
-    <% if authenticated? %>
+    <% if authenticated? && !admin? %>
       <%= render partial: "lessons/student_actions", locals: { lesson: @lesson, completion: @completion } %>
     <% end %>
   </div>
@@ -51,34 +65,39 @@
     <% end %>
   </article>
 
-  <!-- Interactive AI English Doubt Buster & Tutor (Powered by Google Gemini 1.5 Flash) -->
-  <%= render partial: "lessons/ai_tutor" %>
+  <% unless admin? %>
+    <!-- Interactive AI English Doubt Buster & Tutor (Powered by Google Gemini 1.5 Flash) -->
+    <%= render partial: "lessons/ai_tutor" %>
 
-  <!-- Class & Topic Discussion / Community Comments -->
-  <%= render partial: "lesson_comments/section" %>
+    <!-- Notes Section for this Lesson / Topic -->
+    <%= render partial: "lessons/notes_section" %>
 
-  <!-- Previous & Next Lesson Navigation Footer -->
-  <div class="pt-6 border-t border-stone-200">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        <% if @previous_lesson %>
-          <%= link_to (@lesson.topic? ? topic_path(@previous_lesson) : lesson_path(@previous_lesson)), class: "block p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition" do %>
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 block mb-1">← <%= @lesson.topic? ? "Previous Topic" : "Previous Class" %></span>
-            <span class="text-sm font-bold text-stone-900 line-clamp-1"><%= @previous_lesson.title %></span>
-            <span class="text-xs text-stone-500 font-mono"><%= @previous_lesson.lesson_date&.strftime("%b %d, %Y") %></span>
+    <!-- Class & Topic Discussion / Community Comments -->
+    <%= render partial: "lesson_comments/section" %>
+
+    <!-- Previous & Next Lesson Navigation Footer -->
+    <div class="pt-6 border-t border-stone-200">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <% if @previous_lesson %>
+            <%= link_to (@lesson.topic? ? topic_path(@previous_lesson) : lesson_path(@previous_lesson)), class: "block p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition" do %>
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 block mb-1">← <%= @lesson.topic? ? "Previous Topic" : "Previous Class" %></span>
+              <span class="text-sm font-bold text-stone-900 line-clamp-1"><%= @previous_lesson.title %></span>
+              <span class="text-xs text-stone-500 font-mono"><%= @previous_lesson.lesson_date&.strftime("%b %d, %Y") %></span>
+            <% end %>
           <% end %>
-        <% end %>
-      </div>
+        </div>
 
-      <div>
-        <% if @next_lesson %>
-          <%= link_to (@lesson.topic? ? topic_path(@next_lesson) : lesson_path(@next_lesson)), class: "block p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition text-right" do %>
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 block mb-1"><%= @lesson.topic? ? "Next Topic →" : "Next Class →" %></span>
-            <span class="text-sm font-bold text-stone-900 line-clamp-1"><%= @next_lesson.title %></span>
-            <span class="text-xs text-stone-500 font-mono"><%= @next_lesson.lesson_date&.strftime("%b %d, %Y") %></span>
+        <div>
+          <% if @next_lesson %>
+            <%= link_to (@lesson.topic? ? topic_path(@next_lesson) : lesson_path(@next_lesson)), class: "block p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-400 transition text-right" do %>
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-stone-400 block mb-1"><%= @lesson.topic? ? "Next Topic →" : "Next Class →" %></span>
+              <span class="text-sm font-bold text-stone-900 line-clamp-1"><%= @next_lesson.title %></span>
+              <span class="text-xs text-stone-500 font-mono"><%= @next_lesson.lesson_date&.strftime("%b %d, %Y") %></span>
+            <% end %>
           <% end %>
-        <% end %>
+        </div>
       </div>
     </div>
-  </div>
+  <% end %>
 </div>

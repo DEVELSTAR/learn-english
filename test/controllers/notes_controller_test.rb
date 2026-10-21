@@ -5,6 +5,8 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
     @student = users(:student_one)
     @other_student = users(:student_two)
     @admin = users(:admin)
+    @super_admin = users(:super_admin)
+    @lesson = lessons(:compare_lesson)
   end
 
   test "unauthenticated user can view notes index" do
@@ -16,29 +18,48 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
   test "unauthenticated user cannot create note" do
     assert_no_difference("Note.count") do
       post notes_path, params: {
-        note: { title: "Daily Sentences", content: "Unauthenticated note content." }
+        note: { content: "Unauthenticated note content." }
       }
     end
     assert_redirected_to new_session_path
   end
 
-  test "authenticated student can create note" do
+  test "authenticated student can create default global note" do
     sign_in_as(@student)
 
     assert_difference("Note.count", 1) do
       post notes_path, params: {
         note: {
-          title: "Useful Airport Sentences",
-          content: "1. Where is the check-in counter?\n2. Could you please show me your boarding pass?\n3. I have one carry-on bag."
+          content: "1. Where is the check-in counter?\n2. Could you please show me your boarding pass?"
         }
       }
     end
 
     note = Note.last
     assert_equal @student, note.user
-    assert_equal "Useful Airport Sentences", note.title
+    assert_nil note.lesson_id
+    assert_equal true, note.is_global?
     assert_includes note.content, "Where is the check-in counter?"
     assert_redirected_to notes_path
+  end
+
+  test "authenticated student can create note attached to a lesson" do
+    sign_in_as(@student)
+
+    assert_difference("Note.count", 1) do
+      post notes_path, params: {
+        note: {
+          lesson_id: @lesson.id,
+          content: "Notes specific to lesson #{@lesson.title}."
+        }
+      }
+    end
+
+    note = Note.last
+    assert_equal @student, note.user
+    assert_equal @lesson.id, note.lesson_id
+    assert_equal true, note.is_global?
+    assert_redirected_to lesson_path(@lesson, anchor: "lesson_notes_section")
   end
 
   test "can create note via turbo stream" do
@@ -46,100 +67,122 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference("Note.count", 1) do
       post notes_path,
-           params: { note: { title: "Turbo Stream Title", content: "Sentence 1\nSentence 2\nSentence 3" } },
+           params: { note: { content: "Sentence 1\nSentence 2\nSentence 3" } },
            as: :turbo_stream
     end
 
     assert_response :success
     assert_includes response.body, "turbo-stream"
-    assert_includes response.body, "Turbo Stream Title"
+    assert_includes response.body, "Sentence 1"
   end
 
   test "author can edit their note" do
-    note = Note.create!(user: @student, title: "Original Title", content: "Original content")
+    note = Note.create!(user: @student, content: "Original content", is_global: true)
     sign_in_as(@student)
 
     get edit_note_path(note), as: :turbo_stream
     assert_response :success
-    assert_includes response.body, "Original Title"
+    assert_includes response.body, "Original content"
 
     patch note_path(note), params: {
-      note: { title: "Updated Title", content: "Updated content by author" }
+      note: { content: "Updated content by author" }
     }
     assert_redirected_to notes_path
 
     note.reload
-    assert_equal "Updated Title", note.title
     assert_equal "Updated content by author", note.content
   end
 
   test "can update note via turbo stream" do
-    note = Note.create!(user: @student, title: "Initial Title", content: "Before turbo update")
+    note = Note.create!(user: @student, content: "Before turbo update", is_global: true)
     sign_in_as(@student)
 
     patch note_path(note),
-          params: { note: { title: "Edited Title", content: "After turbo update" } },
+          params: { note: { content: "After turbo update" } },
           as: :turbo_stream
     assert_response :success
     assert_includes response.body, "After turbo update"
 
     note.reload
-    assert_equal "Edited Title", note.title
     assert_equal "After turbo update", note.content
   end
 
-  test "anyone authenticated can edit another student note" do
-    note = Note.create!(user: @student, title: "Collaborative English Phrases", content: "Sentence added by student one.")
+  test "unauthorized student cannot edit another student note without permission" do
+    note = Note.create!(user: @student, content: "Sentence added by student one.", is_global: true)
     sign_in_as(@other_student)
 
-    # other student edits student one's note
     patch note_path(note), params: {
-      note: { title: "Collaborative English Phrases (Updated)", content: "Sentence 1\nSentence 2 added by student two." }
+      note: { content: "Attempted edit without permission." }
+    }
+    assert_redirected_to notes_path
+    assert_equal "You are not authorized to edit this note.", flash[:alert]
+
+    note.reload
+    assert_equal "Sentence added by student one.", note.content
+  end
+
+  test "shared student can edit note when can_edit is true and invitation accepted" do
+    note = Note.create!(user: @student, content: "Shared note content", is_global: false)
+    NoteShare.create!(note: note, user: @other_student, can_edit: true, status: :accepted)
+
+    sign_in_as(@other_student)
+    patch note_path(note), params: {
+      note: { content: "Edited by shared student with edit rights." }
     }
     assert_redirected_to notes_path
     assert_equal "Note updated!", flash[:notice]
 
     note.reload
-    assert_equal "Collaborative English Phrases (Updated)", note.title
-    assert_includes note.content, "Sentence 2 added by student two."
+    assert_equal "Edited by shared student with edit rights.", note.content
   end
 
-  test "admin can edit any note" do
-    note = Note.create!(user: @student, title: "Draft Sentences", content: "Grammar mistake here.")
-    sign_in_as(@admin)
+  test "shared student cannot edit note when can_edit is false" do
+    note = Note.create!(user: @student, content: "View-only shared note", is_global: false)
+    NoteShare.create!(note: note, user: @other_student, can_edit: false, status: :accepted)
 
+    sign_in_as(@other_student)
     patch note_path(note), params: {
-      note: { title: "Corrected Sentences", content: "Correct grammar updated by admin." }
+      note: { content: "Attempting unauthorized update" }
     }
     assert_redirected_to notes_path
+    assert_equal "You are not authorized to edit this note.", flash[:alert]
 
     note.reload
-    assert_equal "Corrected Sentences", note.title
-    assert_equal "Correct grammar updated by admin.", note.content
+    assert_equal "View-only shared note", note.content
   end
 
-  test "author can delete their note" do
-    note = Note.create!(user: @student, title: "To Delete", content: "Note to delete")
-    sign_in_as(@student)
-
-    assert_difference("Note.count", -1) do
-      delete note_path(note)
-    end
-    assert_redirected_to notes_path
+  test "regular admin cannot access notes and is redirected to admin panel" do
+    sign_in_as(@admin)
+    get notes_path
+    assert_redirected_to admin_root_path
+    assert_equal "Administrators can only access the Admin Panel.", flash[:alert]
   end
 
-  test "admin can delete any note" do
-    note = Note.create!(user: @student, title: "To Delete Admin", content: "Note moderated by teacher")
+  test "regular admin cannot edit or delete note" do
+    note = Note.create!(user: @student, content: "Student note", is_global: true)
     sign_in_as(@admin)
 
+    patch note_path(note), params: { note: { content: "Hacked by admin" } }
+    assert_redirected_to admin_root_path
+
+    assert_no_difference("Note.count") do
+      delete note_path(note)
+    end
+    assert_redirected_to admin_root_path
+  end
+
+  test "super admin can delete any note" do
+    note = Note.create!(user: @student, content: "Note moderated by teacher", is_global: true)
+    sign_in_as(@super_admin)
+
     assert_difference("Note.count", -1) do
       delete note_path(note)
     end
     assert_redirected_to notes_path
   end
 
-  test "student cannot delete another student note" do
-    note = Note.create!(user: @student, title: "Student One Note", content: "Protected from deletion")
+  test "non-owner cannot delete note" do
+    note = Note.create!(user: @student, content: "Protected from deletion", is_global: true)
     sign_in_as(@other_student)
 
     assert_no_difference("Note.count") do
@@ -150,7 +193,7 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can delete note via turbo stream" do
-    note = Note.create!(user: @student, title: "Turbo Delete", content: "Note to delete via turbo")
+    note = Note.create!(user: @student, content: "Note to delete via turbo", is_global: true)
     sign_in_as(@student)
 
     assert_difference("Note.count", -1) do

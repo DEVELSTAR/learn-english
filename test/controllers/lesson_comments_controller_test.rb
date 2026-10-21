@@ -5,6 +5,7 @@ class LessonCommentsControllerTest < ActionDispatch::IntegrationTest
     @student = users(:student_one)
     @other_student = users(:student_two)
     @admin = users(:admin)
+    @super_admin = users(:super_admin)
     @daily_class = lessons(:compare_lesson)
     @topic = lessons(:topic_lesson)
   end
@@ -82,7 +83,7 @@ class LessonCommentsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "can post reply to a root comment" do
-    sign_in_as(@admin)
+    sign_in_as(@other_student)
     root_comment = LessonComment.create!(lesson: @daily_class, user: @student, content: "What does this mean?")
 
     assert_difference("@daily_class.lesson_comments.count", 1) do
@@ -93,7 +94,7 @@ class LessonCommentsControllerTest < ActionDispatch::IntegrationTest
 
     reply = @daily_class.lesson_comments.last
     assert_equal root_comment, reply.parent
-    assert_equal @admin, reply.user
+    assert_equal @other_student, reply.user
     assert_redirected_to lesson_path(@daily_class, anchor: "lesson_comment_#{reply.id}")
   end
 
@@ -108,9 +109,32 @@ class LessonCommentsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to lesson_path(@daily_class, anchor: "comments-section")
   end
 
-  test "admin can delete any user's comment" do
-    comment = LessonComment.create!(lesson: @daily_class, user: @student, content: "Student comment moderated by teacher")
+  test "regular admin cannot delete student comment" do
+    comment = LessonComment.create!(lesson: @daily_class, user: @student, content: "Student comment")
     sign_in_as(@admin)
+
+    assert_no_difference("LessonComment.count") do
+      delete lesson_comment_path(@daily_class, comment)
+    end
+
+    assert_redirected_to admin_root_path
+  end
+
+  test "regular admin cannot post comment" do
+    sign_in_as(@admin)
+
+    assert_no_difference("LessonComment.count") do
+      post lesson_comments_path(@daily_class), params: {
+        lesson_comment: { content: "Teacher trying to post comment" }
+      }
+    end
+
+    assert_redirected_to admin_root_path
+  end
+
+  test "super admin can delete any user's comment" do
+    comment = LessonComment.create!(lesson: @daily_class, user: @student, content: "Student comment moderated by super admin")
+    sign_in_as(@super_admin)
 
     assert_difference("LessonComment.count", -1) do
       delete lesson_comment_path(@daily_class, comment)

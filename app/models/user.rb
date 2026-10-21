@@ -6,6 +6,8 @@ class User < ApplicationRecord
   has_many :lesson_chat_messages, dependent: :destroy
   has_many :lesson_comments, dependent: :destroy
   has_many :notes, dependent: :destroy
+  has_many :received_note_shares, class_name: "NoteShare", dependent: :destroy
+  has_many :shared_notes, through: :received_note_shares, source: :note
 
   enum :role, { student: 0, admin: 1, super_admin: 2 }, default: :student
 

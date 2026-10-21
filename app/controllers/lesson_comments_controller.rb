@@ -34,6 +34,14 @@ class LessonCommentsController < ApplicationController
   end
 
   def create
+    if current_user.regular_admin?
+      respond_to do |format|
+        format.turbo_stream { head :forbidden }
+        format.html { redirect_to admin_root_path, alert: "Administrators cannot post in student discussions." }
+      end
+      return
+    end
+
     @comment = @lesson.lesson_comments.build(comment_params)
     @comment.user = current_user
 
@@ -60,7 +68,7 @@ class LessonCommentsController < ApplicationController
   end
 
   def destroy
-    unless @comment.user == current_user || current_user.admin?
+    unless @comment.user == current_user || current_user.super_admin?
       respond_to do |format|
         format.turbo_stream { head :forbidden }
         format.html { redirect_to lesson_target_path(@lesson, anchor: "comments-section"), alert: "You are not authorized to delete this comment." }
