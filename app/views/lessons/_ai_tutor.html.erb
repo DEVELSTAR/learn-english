@@ -1,4 +1,4 @@
-<section id="ai-tutor" class="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6 shadow-xs" data-controller="toggle">
+<section id="ai-tutor" class="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6 shadow-xs">
   <!-- Tutor Header -->
   <div class="flex items-center justify-between gap-3 border-b border-stone-100 pb-3 mb-4">
     <div class="flex items-center gap-2.5">
@@ -14,22 +14,11 @@
     </div>
 
     <div class="flex items-center gap-1.5 shrink-0">
-      <div data-toggle-target="content">
-        <%= render partial: "lessons/clear_chat_button", locals: { lesson: @lesson, has_messages: @chat_messages.present? } %>
-      </div>
-
-      <button type="button"
-              data-action="click->toggle#toggle"
-              class="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition cursor-pointer"
-              aria-label="Toggle AI Tutor">
-        <svg style="width: 16px; height: 16px;" class="transition-transform duration-200" data-toggle-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+      <%= render partial: "lessons/clear_chat_button", locals: { lesson: @lesson, has_messages: @chat_messages.present? } %>
     </div>
   </div>
 
-  <div data-toggle-target="content">
+  <div>
     <!-- Chat History Window -->
     <div id="chat_messages_container" class="max-h-[380px] overflow-y-auto px-1 pr-2 space-y-1 mb-4 scrollbar-thin scrollbar-thumb-stone-200">
       <div id="chat_messages_list">

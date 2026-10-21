@@ -61,9 +61,9 @@ module Admin
       assert_not new_admin.super_admin?
     end
 
-    test "super admin can create a super admin" do
+    test "super admin cannot be created from admin panel" do
       sign_in_as(@super_admin)
-      assert_difference("User.where(role: :super_admin).count", 1) do
+      assert_no_difference("User.where(role: :super_admin).count") do
         post admin_administrators_path, params: {
           user: {
             name: "Second Super Admin",
@@ -75,9 +75,8 @@ module Admin
         }
       end
 
-      assert_redirected_to admin_administrators_path
-      new_super = User.find_by(email_address: "second_super@learnenglish.com")
-      assert new_super.super_admin?
+      assert_response :unprocessable_entity
+      assert_includes response.body, "Super Administrator accounts cannot be created from the admin panel."
     end
 
     test "super admin can view administrator details" do
@@ -87,18 +86,38 @@ module Admin
       assert_select "#page_title", text: @admin.name
     end
 
-    test "super admin can view edit form" do
+    test "super admin can view edit form for regular admin" do
       sign_in_as(@super_admin)
       get edit_admin_administrator_path(@admin)
       assert_response :success
       assert_select "#page_title", text: "Edit Administrator"
     end
 
-    test "super admin can update administrator details and promote to super admin" do
+    test "super admin cannot view edit form for super admin" do
+      sign_in_as(@super_admin)
+      get edit_admin_administrator_path(@super_admin)
+      assert_redirected_to admin_administrators_path
+      assert_equal "Super Administrator accounts cannot be modified from the admin panel.", flash[:alert]
+    end
+
+    test "super admin cannot update super admin from admin panel" do
+      sign_in_as(@super_admin)
+      original_name = @super_admin.name
+
+      patch admin_administrator_path(@super_admin), params: {
+        user: { name: "Modified Super Admin" }
+      }
+
+      assert_redirected_to admin_administrators_path
+      assert_equal "Super Administrator accounts cannot be modified from the admin panel.", flash[:alert]
+      assert_equal original_name, @super_admin.reload.name
+    end
+
+    test "super admin can update regular admin but cannot promote to super admin" do
       sign_in_as(@super_admin)
       patch admin_administrator_path(@admin), params: {
         user: {
-          name: "Promoted Teacher Admin",
+          name: "Updated Teacher Admin",
           role: "super_admin",
           password: "",
           password_confirmation: ""
@@ -107,11 +126,12 @@ module Admin
 
       assert_redirected_to admin_administrators_path
       @admin.reload
-      assert_equal "Promoted Teacher Admin", @admin.name
-      assert @admin.super_admin?
+      assert_equal "Updated Teacher Admin", @admin.name
+      assert_equal "admin", @admin.role
+      assert_not @admin.super_admin?
     end
 
-    test "super admin can delete an administrator" do
+    test "super admin can delete a regular administrator" do
       sign_in_as(@super_admin)
       assert_difference("User.count", -1) do
         delete admin_administrator_path(@admin)
@@ -120,14 +140,14 @@ module Admin
       assert_redirected_to admin_administrators_path
     end
 
-    test "super admin cannot delete their own account" do
+    test "super admin cannot delete any super admin account" do
       sign_in_as(@super_admin)
       assert_no_difference("User.count") do
         delete admin_administrator_path(@super_admin)
       end
 
       assert_redirected_to admin_administrators_path
-      assert_equal "You cannot delete your own account!", flash[:alert]
+      assert_equal "Super Administrator accounts cannot be deleted from the admin panel!", flash[:alert]
     end
 
     test "accessing student id redirects with warning" do
