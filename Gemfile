@@ -71,6 +71,6 @@ end
 
 gem "activeadmin", "~> 3.5"
 
-gem "kramdown", "~> 2.5"
+gem "kramdown", "~> 2.6"
 
 gem "kramdown-parser-gfm", "~> 1.1"
